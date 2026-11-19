@@ -18,9 +18,13 @@
         <section class="intro">
           <div class="eyebrow"><span></span> EL PASATIEMPO DETECTIVESCO</div>
           <h1>Un misterio en<br /><em>cada página.</em></h1>
-          <p>Un crimen, seis sospechosos y un tablero por resolver. Afila el lápiz: el siguiente caso te está esperando.</p>
-          <button id="download" type="button"><span>↓</span> Descargar un nuevo caso <span class="button-arrow">↗</span></button>
-          <div class="download-note">PDF GRATIS · UNA PÁGINA · LISTO PARA IMPRIMIR</div>
+          <p>Un crimen, una casa llena de sospechosos y un plano por resolver. Afila el lápiz: el siguiente caso te está esperando.</p>
+          <div class="levels" role="group" aria-label="Elige la dificultad del caso">
+            <button type="button" data-difficulty="facil"><span>↓</span> Fácil <small>4 × 4 · 4 personas</small></button>
+            <button type="button" data-difficulty="media"><span>↓</span> Media <small>5 × 5 · 5 personas</small></button>
+            <button type="button" data-difficulty="dificil"><span>↓</span> Difícil <small>6 × 6 · 6 personas</small></button>
+          </div>
+          <div class="download-note">PDF GRATIS · CASO + SOLUCIONARIO · LISTO PARA IMPRIMIR</div>
           <p id="status" class="status" role="status" aria-live="polite"></p>
         </section>
 
@@ -30,31 +34,26 @@
             <span class="preview-label"><span></span> VISTA PREVIA</span>
           </div>
           <div class="paper-wrap">
-            <article class="paper" aria-label="Ejemplo de la página del PDF">
-              <div class="paper-top"><strong>MURDOKUER <span> / EXPEDIENTE Nº 01</span></strong><span>CONFIDENCIAL</span></div>
+            <article class="paper" aria-label="Ejemplo de la primera página del PDF">
+              <div class="paper-top"><strong>MURDOKUER <span id="case-number"></span></strong><span id="case-level"></span></div>
               <div class="paper-content">
                 <div class="clues">
                   <div class="case-label">EL CASO</div>
-                  <h3>El misterio<br /><em>de la última cena</em></h3>
-                  <p class="story">Seis personas compartieron mesa. Una de ellas es culpable. La respuesta se esconde en el tablero.</p>
-                  <div class="clue-heading">01 / LAS PISTAS</div>
-                  <p>Completa el tablero con números del 1 al 6, sin repetir ninguno en cada fila, columna o región de 2 × 3.</p>
-                  <p>El número de la casilla marcada <strong id="scene"></strong> revela quién es la persona culpable.</p>
-                  <p>Un testigo recuerda que su credencial tenía un número <strong id="parity"></strong>.</p>
-                  <div class="clue-heading">02 / SOSPECHOSOS</div>
-                  <div class="suspects">
-                    <span><b>1</b> Alba</span><span><b>2</b> Bruno</span>
-                    <span><b>3</b> Clara</span><span><b>4</b> Diego</span>
-                    <span><b>5</b> Elena</span><span><b>6</b> Félix</span>
-                  </div>
+                  <h3 id="case-title"></h3>
+                  <p class="story">Esta noche alguien no salió con vida de la casa. Ordena a los implicados en el plano y descubre quién se quedó a solas con la víctima.</p>
+                  <div class="clue-heading">01 / LAS REGLAS</div>
+                  <ol id="rules" class="rules"></ol>
+                  <div class="clue-heading">02 / LAS PISTAS</div>
+                  <ul id="clue-list" class="clue-list"></ul>
                 </div>
                 <div class="board-area">
-                  <div class="board-heading"><span>EL TABLERO</span><span>PIENSA CON CALMA</span></div>
+                  <div class="board-heading"><span>EL PLANO</span><span>PIENSA CON CALMA</span></div>
                   <div id="board" class="board" role="img"></div>
-                  <div class="board-footer"><span>UNA SOLA SOLUCIÓN</span><span>✳</span></div>
+                  <div class="clue-heading">03 / LOS IMPLICADOS</div>
+                  <div id="people" class="people"></div>
                 </div>
               </div>
-              <div class="paper-bottom"><span>MURDOKUER · EL ARTE DE DEDUCIR</span><span>01 / 01</span></div>
+              <div class="paper-bottom"><span>MURDOKUER · EL ARTE DE DEDUCIR</span><span>01 / 02</span></div>
             </article>
           </div>
           <p class="preview-caption"><span>✳</span> Cada descarga genera un caso nuevo, listo para imprimir.</p>

@@ -1,32 +1,51 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { countSolutions, generatePuzzle, sceneLabel } from '../src/puzzle.js';
+import { DIFFICULTIES, OBJECTS, cellLabel, clueHolds, countSolutions, generatePuzzle } from '../src/puzzle.js';
 
-test('generated puzzles have a unique solution and an empty marked cell', () => {
-  const puzzles = new Set();
-  for (let i = 0; i < 50; i++) {
-    const { board, scene, parity } = generatePuzzle();
-    assert.equal(board.length, 6);
-    assert.ok(board.every((row) => row.length === 6 && row.every((value) => Number.isInteger(value) && value >= 0 && value <= 6)));
-    assert.equal(countSolutions(board), 1);
-    assert.equal(board[scene.row][scene.col], 0);
-    assert.match(sceneLabel(scene), /^[A-F][1-6]$/);
-    const solutions = [1, 2, 3, 4, 5, 6].filter((value) => {
-      const copy = board.map((row) => [...row]);
-      copy[scene.row][scene.col] = value;
-      return countSolutions(copy) === 1;
-    });
-    assert.equal(solutions.length, 1);
-    assert.equal(parity, solutions[0] % 2 === 0 ? 'par' : 'impar');
-    puzzles.add(JSON.stringify(board));
-  }
-  assert.ok(puzzles.size > 1);
+for (const [difficulty, settings] of Object.entries(DIFFICULTIES)) {
+  test(`los casos de nivel ${settings.label} son coherentes y tienen solución única`, () => {
+    const seen = new Set();
+    for (let i = 0; i < 30; i++) {
+      const puzzle = generatePuzzle(difficulty);
+      const { size, people, solution, roomGrid, objects } = puzzle;
+      assert.equal(size, settings.size);
+      assert.equal(people.length, size);
+      assert.equal(people.filter((person) => person.victim).length, 1);
+      assert.equal(new Set(people.map((person) => person.emoji)).size, size);
+
+      // Una persona por fila y por columna, nunca sobre un mueble bloqueante.
+      assert.equal(new Set(solution.map((cell) => cell.row)).size, size);
+      assert.equal(new Set(solution.map((cell) => cell.col)).size, size);
+      for (const { row, col } of solution) {
+        const object = objects[row][col];
+        assert.ok(!object || OBJECTS[object].occupiable);
+      }
+
+      // La víctima comparte habitación exactamente con la persona culpable.
+      const crimeRoom = roomGrid[solution[puzzle.victim].row][solution[puzzle.victim].col];
+      const together = solution.map((cell, index) => ({ cell, index })).filter(({ cell }) => roomGrid[cell.row][cell.col] === crimeRoom);
+      assert.deepEqual(together.map(({ index }) => index).sort(), [puzzle.murderer, puzzle.victim].sort());
+
+      // Todas las pistas son ciertas y bastan para una única solución.
+      assert.ok(puzzle.clues.length > 0);
+      for (const clue of puzzle.clues) {
+        assert.ok(clueHolds(puzzle, clue, solution), clue.text);
+        assert.ok(clue.text.length > 0);
+      }
+      assert.equal(countSolutions(puzzle), 1);
+      if (difficulty === 'dificil') assert.ok(puzzle.clues.every((clue) => clue.type !== 'row' && clue.type !== 'col'));
+      seen.add(JSON.stringify(roomGrid));
+    }
+    assert.ok(seen.size > 1);
+  });
+}
+
+test('sin pistas hay más de una solución', () => {
+  const puzzle = generatePuzzle('facil');
+  assert.equal(countSolutions(puzzle, []), 2);
 });
 
-test('solution counting stops at two for an empty board without mutating it', () => {
-  const board = Array.from({ length: 6 }, () => Array(6).fill(0));
-  assert.equal(countSolutions(board), 2);
-  assert.ok(board.every((row) => row.every((value) => value === 0)));
-  board[0][0] = board[0][1] = 1;
-  assert.equal(countSolutions(board), 0);
+test('las coordenadas usan letra de columna y número de fila', () => {
+  assert.equal(cellLabel({ row: 0, col: 0 }), 'A1');
+  assert.equal(cellLabel({ row: 5, col: 3 }), 'D6');
 });
