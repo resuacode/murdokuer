@@ -43,14 +43,14 @@ function createWriter(pdf) {
   return { text, emoji, paragraph };
 }
 
-function pageFrame(pdf, write, puzzle, page, heading) {
+function pageFrame(pdf, write, puzzle, pageLabel, heading) {
   write.text(`MURDOKUER  /  EXPEDIENTE Nº ${puzzle.caseNumber}`, 18, 16, 9, INK, 'bold');
   write.text(heading, 279, 16, 8, GREEN, 'bold', { align: 'right' });
   pdf.setDrawColor(LINE);
   pdf.setLineWidth(0.2);
   pdf.line(18, 20, 279, 20);
   pdf.line(18, 193, 279, 193);
-  write.text(`0${page} / 02`, 279, 199, 8, MUTED, 'bold', { align: 'right' });
+  write.text(pageLabel, 279, 199, 8, MUTED, 'bold', { align: 'right' });
 }
 
 function drawBoard(pdf, write, puzzle, { x, y, width, showSolution }) {
@@ -116,9 +116,10 @@ function drawPeople(write, puzzle, { x, y, width }) {
   return y + Math.ceil(puzzle.people.length / columns) * 11;
 }
 
-export function downloadPdf(puzzle, onlineUrl) {
-  const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-  const write = createWriter(pdf);
+// Añade un caso en la página actual y su solución en la siguiente.
+function addCase(pdf, write, puzzle, onlineUrl, { index, total } = {}) {
+  const booklet = total > 1;
+  const number = booklet ? `CASO ${String(index + 1).padStart(2, '0')} / ${String(total).padStart(2, '0')}` : '';
   const level = levelLabel(puzzle).toUpperCase();
   const left = 18;
   const leftWidth = 132;
@@ -126,7 +127,7 @@ export function downloadPdf(puzzle, onlineUrl) {
   const boardWidth = 106;
 
   // Hoja 1: el caso.
-  pageFrame(pdf, write, puzzle, 1, `DIFICULTAD ${level} · ${puzzle.size} × ${puzzle.size} · CONFIDENCIAL`);
+  pageFrame(pdf, write, puzzle, booklet ? `${number} · ENUNCIADO` : '01 / 02', `DIFICULTAD ${level} · ${puzzle.size} × ${puzzle.size} · CONFIDENCIAL`);
   if (onlineUrl) {
     write.text('¿PREFIERES JUGAR EN PANTALLA? ', left, 199, 7, MUTED, 'bold');
     pdf.setFont('helvetica', 'bold');
@@ -183,7 +184,7 @@ export function downloadPdf(puzzle, onlineUrl) {
 
   // Hoja 2: el solucionario.
   pdf.addPage();
-  pageFrame(pdf, write, puzzle, 2, 'SOLUCIONARIO · NO LEER ANTES DE TIEMPO');
+  pageFrame(pdf, write, puzzle, booklet ? `${number} · SOLUCIÓN` : '02 / 02', 'SOLUCIONARIO · NO LEER ANTES DE TIEMPO');
   write.text('MURDOKUER · EL ARTE DE DEDUCIR', left, 199, 8, MUTED, 'bold');
   const murderer = puzzle.people[puzzle.murderer];
   const victim = puzzle.people[puzzle.victim];
@@ -210,6 +211,31 @@ export function downloadPdf(puzzle, onlineUrl) {
   write.text('EL PLANO RESUELTO', boardX, 30, 9, GREEN, 'bold');
   drawBoard(pdf, write, puzzle, { x: boardX, y: 38, width: boardWidth, showSolution: true });
   write.text('Marco verde: culpable · Marco rojo: víctima', boardX, 152, 8, MUTED);
+}
 
+const newDocument = () => new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+export function downloadPdf(puzzle, onlineUrl) {
+  const pdf = newDocument();
+  addCase(pdf, createWriter(pdf), puzzle, onlineUrl);
   pdf.save(`murdokuer-${puzzle.difficulty}-${puzzle.caseNumber}.pdf`);
+}
+
+/**
+ * Cuadernillo: cada caso en una página impar y su solución en la siguiente (doble cara).
+ * Cede el hilo entre casos para que la página pueda mostrar el avance.
+ */
+export async function downloadBooklet(puzzles, { urlFor, filename, onProgress, signal } = {}) {
+  const pdf = newDocument();
+  const write = createWriter(pdf);
+  pdf.setProperties({ title: `Murdokuer · ${puzzles.length} casos`, creator: 'Murdokuer' });
+  for (const [index, puzzle] of puzzles.entries()) {
+    if (signal?.aborted) throw new DOMException('Cancelado', 'AbortError');
+    if (index > 0) pdf.addPage();
+    addCase(pdf, write, puzzle, urlFor?.(puzzle), { index, total: puzzles.length });
+    onProgress?.(index + 1, puzzles.length);
+    await new Promise((resolve) => { setTimeout(resolve, 0); });
+  }
+  if (signal?.aborted) throw new DOMException('Cancelado', 'AbortError');
+  pdf.save(filename ?? `murdokuer-cuadernillo-${puzzles.length}-casos.pdf`);
 }

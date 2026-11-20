@@ -24,8 +24,51 @@
             <div class="cta-or">o descarga un caso para imprimir</div>
             <div id="levels" class="levels" role="group" aria-label="Descargar un caso por dificultad"></div>
           </div>
-          <div class="download-note">PDF GRATIS · CASO + SOLUCIONARIO · LISTO PARA IMPRIMIR</div>
+          <div class="download-note">PDF GRATIS · CASO + SOLUCIONARIO · ¿VARIOS? <a href="#booklet-title">PREPARA UN CUADERNILLO ↓</a></div>
           <p id="status" class="status" role="status" aria-live="polite"></p>
+        </section>
+
+        <section class="booklet" aria-labelledby="booklet-title">
+          <div class="booklet-card">
+            <div class="booklet-intro">
+              <span class="section-kicker">PARA IMPRIMIR VARIOS DE UNA VEZ</span>
+              <h2 id="booklet-title">Prepara un cuadernillo</h2>
+              <p>Varios casos en un solo PDF. Cada caso ocupa una página y su solución la siguiente, así que al imprimir a doble cara la solución queda en el reverso.</p>
+              <ul class="booklet-tips">
+                <li><span>🖨️</span> Imprime a doble cara, volteando por el borde corto.</li>
+                <li><span>✂</span> Cada hoja es un caso completo: se puede repartir suelta.</li>
+                <li><span>▶</span> Cada caso trae su enlace para jugarlo también en línea.</li>
+              </ul>
+            </div>
+            <form id="booklet-form" class="booklet-form" novalidate>
+              <fieldset class="booklet-levels">
+                <legend>1. Dificultad</legend>
+                <div id="booklet-levels" class="booklet-options"></div>
+              </fieldset>
+              <div class="booklet-count">
+                <label for="booklet-count">2. Número de casos</label>
+                <div class="count-row">
+                  <div class="stepper">
+                    <button type="button" id="count-minus" aria-label="Un caso menos">−</button>
+                    <input id="booklet-count" type="number" inputmode="numeric" aria-describedby="booklet-limit" />
+                    <button type="button" id="count-plus" aria-label="Un caso más">+</button>
+                  </div>
+                  <input id="booklet-range" type="range" aria-label="Número de casos" />
+                </div>
+                <small id="booklet-limit" class="booklet-limit"></small>
+              </div>
+              <p id="booklet-summary" class="booklet-summary"></p>
+              <button type="submit" id="booklet-submit" class="booklet-submit"><span>↓</span> Descargar cuadernillo</button>
+              <div id="booklet-progress" class="booklet-progress" hidden>
+                <div class="progress-bar" role="progressbar" aria-labelledby="booklet-progress-text" aria-valuemin="0" aria-valuemax="100"><span id="booklet-bar"></span></div>
+                <div class="progress-row">
+                  <span id="booklet-progress-text"></span>
+                  <button type="button" id="booklet-cancel" class="link-button">Cancelar</button>
+                </div>
+              </div>
+              <p id="booklet-status" class="booklet-status" role="status" aria-live="polite"></p>
+            </form>
+          </div>
         </section>
 
         <section class="preview-section" aria-labelledby="preview-title">

@@ -223,7 +223,8 @@ export function clueHolds(puzzle, clue, positions) {
 }
 
 // Cuenta las colocaciones que cumplen las reglas y las pistas (se detiene en `limit`).
-export function countSolutions(puzzle, clues = puzzle.clues, limit = 2) {
+// Si la búsqueda supera `budget` pasos, devuelve `limit`: «no se puede asegurar que sea única».
+export function countSolutions(puzzle, clues = puzzle.clues, limit = 2, budget = Infinity) {
   const { size, people, roomGrid } = puzzle;
   const free = [];
   for (let row = 0; row < size; row++) {
@@ -238,13 +239,19 @@ export function countSolutions(puzzle, clues = puzzle.clues, limit = 2) {
   // Máximo de personas por habitación según las pistas de recuento.
   const maxInRoom = puzzle.rooms.map(() => people.length);
   for (const clue of global) if (clue.type === 'roomCount') maxInRoom[clue.room] = Math.min(maxInRoom[clue.room], clue.count);
+  const alone = global.filter((clue) => clue.type === 'aloneInRoom').map((clue) => clue.a);
+  const emptyRooms = global.find((clue) => clue.type === 'emptyRooms');
+  const maxOccupiedRooms = emptyRooms ? puzzle.rooms.length - emptyRooms.count : puzzle.rooms.length;
   const order = people.map((_, index) => index).sort((x, y) => domains[x].length - domains[y].length);
   const victim = people.findIndex((person) => person.victim);
   const counts = Array(puzzle.rooms.length).fill(0);
   const positions = [];
   let count = 0;
+  let steps = 0;
+  let occupiedRooms = 0;
 
   function search(depth, usedRows, usedCols) {
+    if (++steps > budget) { count = limit; return; }
     if (depth === order.length) {
       if (counts[roomGrid[positions[victim].row][positions[victim].col]] !== 2) return;
       if (global.every((clue) => clueHolds(puzzle, clue, positions))) count++;
@@ -256,12 +263,15 @@ export function countSolutions(puzzle, clues = puzzle.clues, limit = 2) {
       const room = roomGrid[cell.row][cell.col];
       if (counts[room] >= maxInRoom[room]) continue;
       positions[person] = cell;
-      counts[room]++;
+      if (counts[room]++ === 0) occupiedRooms++;
       const victimCell = positions[victim];
+      // Podas: las habitaciones solo pueden ganar gente al seguir colocando.
       const ok = (!victimCell || counts[roomGrid[victimCell.row][victimCell.col]] <= 2)
+        && occupiedRooms <= maxOccupiedRooms
+        && alone.every((a) => !positions[a] || counts[roomGrid[positions[a].row][positions[a].col]] === 1)
         && binary.every((clue) => positions[clue.a] === undefined || positions[clue.b] === undefined || clueHolds(puzzle, clue, positions));
       if (ok) search(depth + 1, usedRows | (1 << cell.row), usedCols | (1 << cell.col));
-      counts[room]--;
+      if (--counts[room] === 0) occupiedRooms--;
       positions[person] = undefined;
       if (count >= limit) return;
     }
@@ -371,6 +381,10 @@ function candidateClues(puzzle, types) {
     .map(({ clue }) => clue);
 }
 
+// Pasos máximos del solucionador al generar: si un caso cuesta más de verificar, se descarta.
+const GENERATION_BUDGET = 10000;
+const isUnique = (puzzle, clues) => countSolutions(puzzle, clues, 2, GENERATION_BUDGET) === 1;
+
 function chooseClues(puzzle, settings) {
   const pool = candidateClues(puzzle, settings.types);
   const chosen = [];
@@ -380,15 +394,15 @@ function chooseClues(puzzle, settings) {
     if (clue) chosen.push(clue);
   }
   for (const clue of pool) {
-    if (countSolutions(puzzle, chosen) === 1) break;
+    if (isUnique(puzzle, chosen)) break;
     if (!chosen.includes(clue)) chosen.push(clue);
   }
-  if (countSolutions(puzzle, chosen) !== 1) return null;
+  if (!isUnique(puzzle, chosen)) return null;
   // Quita las pistas sobrantes (en fácil y media, cada persona conserva al menos una).
   for (const clue of shuffle(chosen)) {
     const rest = chosen.filter((item) => item !== clue);
     const keepsVoice = !settings.everyoneSpeaks || clue.a === undefined || rest.some((item) => item.a === clue.a);
-    if (keepsVoice && countSolutions(puzzle, rest) === 1) chosen.splice(chosen.indexOf(clue), 1);
+    if (keepsVoice && isUnique(puzzle, rest)) chosen.splice(chosen.indexOf(clue), 1);
   }
   return chosen;
 }

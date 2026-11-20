@@ -32,6 +32,12 @@ semilla dan siempre el mismo caso. Hay cinco niveles:
 - **En papel:** la portada descarga un PDF A4 horizontal de dos hojas: el caso (reglas,
   pistas, plano e implicados) y el solucionario. El pie de la primera hoja enlaza al
   mismo caso en línea.
+- **Cuadernillo:** varios casos en un solo PDF (de 2 a 30 según el nivel, o una mezcla
+  de fácil a maestro). Cada caso ocupa una página y su solución la siguiente, para
+  imprimir a doble cara (volteo por el borde corto) con la solución en el reverso. Los
+  límites (30 fácil/media, 25 difícil, 15 experto, 10 maestro, 20 mezcla) mantienen la
+  espera en pocos segundos; se generan en paralelo con varios Web Workers, con barra de
+  progreso y opción de cancelar.
 - **En línea** (`jugar.html?nivel=…&caso=…`): se elige a una persona (o teclas 1–8) y se
   toca su casilla; con «Descartar» (tecla X o clic derecho) se tachan casillas. Marca
   las filas y columnas repetidas y, si se quiere, las pistas incumplidas. Incluye
@@ -47,6 +53,7 @@ semilla dan siempre el mismo caso. Hay cinco niveles:
 | [src/game.js](src/game.js) | Reglas de una partida en línea (sin DOM) |
 | [src/board.js](src/board.js) | Reglas, textos y pintado del plano compartidos |
 | [src/pdf.js](src/pdf.js) | PDF con jsPDF (los emojis se insertan como imágenes) |
+| [src/booklet.js](src/booklet.js) | Límites, reparto de niveles y estimación de tiempo de los cuadernillos |
 | [src/generate.js](src/generate.js), [src/puzzle.worker.js](src/puzzle.worker.js) | Generación en un Web Worker para no bloquear la página |
 | [src/main.js](src/main.js), [index.html](index.html) | Portada y descargas |
 | [src/play.js](src/play.js), [jugar.html](jugar.html), [src/play.css](src/play.css) | Juego en línea |
