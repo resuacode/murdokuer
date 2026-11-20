@@ -3,27 +3,42 @@
 // - Hay N personas (N − 1 sospechosos y la víctima): una por fila y una por columna.
 // - Nadie puede estar en una casilla con un mueble bloqueante (planta, estantería...).
 // - La persona culpable es la única que está a solas con la víctima en su habitación.
+// Cada caso sale de una semilla numérica: la misma semilla y el mismo nivel dan el mismo caso.
 
 export const DIFFICULTIES = {
   facil: {
     label: 'Fácil',
     size: 4,
     rooms: 3,
-    types: { inRoom: 4, onObject: 3, row: 1, col: 1, besideObject: 1 },
+    types: { inRoom: 4, onObject: 3, row: 1, col: 1, besideObject: 1, onFloor: 1, corner: 1 },
     everyoneSpeaks: true,
   },
   media: {
     label: 'Media',
     size: 5,
     rooms: 4,
-    types: { inRoom: 3, notInRoom: 1, onObject: 3, besideObject: 2, row: 1, col: 1, sameRoom: 1 },
+    types: { inRoom: 3, notInRoom: 1, onObject: 3, besideObject: 2, row: 1, col: 1, sameRoom: 1, edge: 1, corner: 1, roomCount: 1, onFloor: 1 },
     everyoneSpeaks: true,
   },
   dificil: {
     label: 'Difícil',
     size: 6,
     rooms: 5,
-    types: { inRoom: 3, notInRoom: 2, onObject: 2, besideObject: 2, north: 1, west: 1, sameRoom: 1, diagonal: 1 },
+    types: { inRoom: 3, notInRoom: 2, onObject: 2, besideObject: 2, north: 1, west: 1, sameRoom: 1, differentRoom: 1, diagonal: 1, edge: 1, notEdge: 1, roomCount: 1, aloneInRoom: 1 },
+    everyoneSpeaks: false,
+  },
+  experto: {
+    label: 'Experto',
+    size: 7,
+    rooms: 6,
+    types: { inRoom: 2, notInRoom: 2, onObject: 2, besideObject: 2, onFloor: 1, north: 1, west: 1, northBy: 1, westBy: 1, sameRoom: 1, differentRoom: 1, diagonal: 1, edge: 1, notEdge: 1, corner: 1, roomCount: 1, aloneInRoom: 1, emptyRooms: 1 },
+    everyoneSpeaks: false,
+  },
+  maestro: {
+    label: 'Maestro',
+    size: 8,
+    rooms: 7,
+    types: { inRoom: 2, notInRoom: 2, onObject: 2, besideObject: 2, onFloor: 1, north: 1, west: 1, northBy: 1, westBy: 1, sameRoom: 2, differentRoom: 2, diagonal: 1, edge: 1, notEdge: 1, corner: 1, roomCount: 2, aloneInRoom: 2, emptyRooms: 1 },
     everyoneSpeaks: false,
   },
 };
@@ -49,6 +64,10 @@ const ROOMS = [
   { name: 'Estudio', article: 'el estudio' },
   { name: 'Vestíbulo', article: 'el vestíbulo' },
   { name: 'Invernadero', article: 'el invernadero' },
+  { name: 'Despacho', article: 'el despacho' },
+  { name: 'Desván', article: 'el desván' },
+  { name: 'Bodega', article: 'la bodega' },
+  { name: 'Galería', article: 'la galería' },
 ];
 
 const SUSPECTS = [
@@ -61,6 +80,9 @@ const SUSPECTS = [
   { name: 'Gloria', emoji: '👵', gender: 'f', role: 'la abuela' },
   { name: 'Hugo', emoji: '👨‍🏫', gender: 'm', role: 'el profesor' },
   { name: 'Inés', emoji: '👩‍🔬', gender: 'f', role: 'la científica' },
+  { name: 'Julia', emoji: '👩‍✈️', gender: 'f', role: 'la piloto' },
+  { name: 'Marcos', emoji: '👨‍🚒', gender: 'm', role: 'el bombero' },
+  { name: 'Nora', emoji: '👩‍💼', gender: 'f', role: 'la abogada' },
 ];
 const VICTIMS = [
   { name: 'Víctor', emoji: '👴', gender: 'm', role: 'el millonario' },
@@ -74,9 +96,25 @@ const TITLES = [
   ['Un crimen', 'a la hora del té'],
   ['La noche', 'de la tormenta'],
   ['El caso', 'del reloj parado'],
+  ['Sombras', 'en el desván'],
+  ['La herencia', 'envenenada'],
+  ['El último brindis', 'de la familia'],
+  ['Silencio', 'en la mansión'],
 ];
 
-const random = Math.random;
+// Generador pseudoaleatorio con semilla (mulberry32).
+function seededRandom(seed) {
+  let state = seed >>> 0;
+  return () => {
+    state = (state + 0x6d2b79f5) >>> 0;
+    let t = state;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+let random = Math.random;
 const pick = (values) => values[Math.floor(random() * values.length)];
 
 function shuffle(values) {
@@ -86,6 +124,10 @@ function shuffle(values) {
     [result[i], result[j]] = [result[j], result[i]];
   }
   return result;
+}
+
+export function randomSeed() {
+  return 100000 + Math.floor(Math.random() * 900000);
 }
 
 const NEIGHBOURS = [[-1, 0], [1, 0], [0, -1], [0, 1]];
@@ -119,6 +161,11 @@ function generateRooms(size, count) {
 
 // ---- Evaluación de pistas ---------------------------------------------------
 
+export function canOccupy(puzzle, { row, col }) {
+  const object = puzzle.objects[row][col];
+  return !object || OBJECTS[object].occupiable;
+}
+
 function besideObject(puzzle, cell, object) {
   return NEIGHBOURS.some(([dr, dc]) => {
     const row = cell.row + dr;
@@ -127,59 +174,94 @@ function besideObject(puzzle, cell, object) {
   });
 }
 
+const isEdge = (puzzle, { row, col }) => row === 0 || col === 0 || row === puzzle.size - 1 || col === puzzle.size - 1;
+const isCorner = (puzzle, { row, col }) => (row === 0 || row === puzzle.size - 1) && (col === 0 || col === puzzle.size - 1);
+const roomOf = (puzzle, cell) => puzzle.roomGrid[cell.row][cell.col];
+
+function roomCounts(puzzle, positions) {
+  const counts = Array(puzzle.rooms.length).fill(0);
+  positions.forEach((cell) => { if (cell) counts[roomOf(puzzle, cell)]++; });
+  return counts;
+}
+
+// Pistas que dependen de una sola persona, de dos o de todo el plano.
+const UNARY = new Set(['inRoom', 'notInRoom', 'onObject', 'besideObject', 'row', 'col', 'onFloor', 'edge', 'notEdge', 'corner']);
+const GLOBAL = new Set(['roomCount', 'aloneInRoom', 'emptyRooms']);
+
+// Personas que hace falta colocar para poder evaluar una pista (null = todas).
+export function clueParticipants(clue) {
+  if (GLOBAL.has(clue.type)) return null;
+  return UNARY.has(clue.type) ? [clue.a] : [clue.a, clue.b];
+}
+
 export function clueHolds(puzzle, clue, positions) {
   const a = positions[clue.a];
   const b = positions[clue.b];
   switch (clue.type) {
-    case 'inRoom': return puzzle.roomGrid[a.row][a.col] === clue.room;
-    case 'notInRoom': return puzzle.roomGrid[a.row][a.col] !== clue.room;
+    case 'inRoom': return roomOf(puzzle, a) === clue.room;
+    case 'notInRoom': return roomOf(puzzle, a) !== clue.room;
     case 'onObject': return puzzle.objects[a.row][a.col] === clue.object;
     case 'besideObject': return besideObject(puzzle, a, clue.object);
+    case 'onFloor': return !puzzle.objects[a.row][a.col];
     case 'row': return a.row === clue.row;
     case 'col': return a.col === clue.col;
+    case 'edge': return isEdge(puzzle, a);
+    case 'notEdge': return !isEdge(puzzle, a);
+    case 'corner': return isCorner(puzzle, a);
     case 'north': return a.row < b.row;
     case 'west': return a.col < b.col;
-    case 'sameRoom': return puzzle.roomGrid[a.row][a.col] === puzzle.roomGrid[b.row][b.col];
+    case 'northBy': return b.row - a.row === clue.distance;
+    case 'westBy': return b.col - a.col === clue.distance;
+    case 'sameRoom': return roomOf(puzzle, a) === roomOf(puzzle, b);
+    case 'differentRoom': return roomOf(puzzle, a) !== roomOf(puzzle, b);
     case 'diagonal': return Math.abs(a.row - b.row) === 1 && Math.abs(a.col - b.col) === 1;
+    case 'roomCount': return roomCounts(puzzle, positions)[clue.room] === clue.count;
+    case 'aloneInRoom': return roomCounts(puzzle, positions)[roomOf(puzzle, a)] === 1;
+    case 'emptyRooms': return roomCounts(puzzle, positions).filter((count) => count === 0).length === clue.count;
     default: throw new Error(`Pista desconocida: ${clue.type}`);
   }
 }
 
-const UNARY = new Set(['inRoom', 'notInRoom', 'onObject', 'besideObject', 'row', 'col']);
-
 // Cuenta las colocaciones que cumplen las reglas y las pistas (se detiene en `limit`).
 export function countSolutions(puzzle, clues = puzzle.clues, limit = 2) {
-  const { size, people, objects, roomGrid } = puzzle;
+  const { size, people, roomGrid } = puzzle;
   const free = [];
   for (let row = 0; row < size; row++) {
-    for (let col = 0; col < size; col++) {
-      const object = objects[row][col];
-      if (!object || OBJECTS[object].occupiable) free.push({ row, col });
-    }
+    for (let col = 0; col < size; col++) if (canOccupy(puzzle, { row, col })) free.push({ row, col });
   }
   const domains = people.map((_, person) => free.filter((cell) => clues.every((clue) => {
     if (!UNARY.has(clue.type) || clue.a !== person) return true;
     return clueHolds(puzzle, clue, { [person]: cell });
   })));
-  const binary = clues.filter((clue) => !UNARY.has(clue.type));
+  const binary = clues.filter((clue) => !UNARY.has(clue.type) && !GLOBAL.has(clue.type));
+  const global = clues.filter((clue) => GLOBAL.has(clue.type));
+  // Máximo de personas por habitación según las pistas de recuento.
+  const maxInRoom = puzzle.rooms.map(() => people.length);
+  for (const clue of global) if (clue.type === 'roomCount') maxInRoom[clue.room] = Math.min(maxInRoom[clue.room], clue.count);
   const order = people.map((_, index) => index).sort((x, y) => domains[x].length - domains[y].length);
-  const positions = [];
   const victim = people.findIndex((person) => person.victim);
+  const counts = Array(puzzle.rooms.length).fill(0);
+  const positions = [];
   let count = 0;
 
   function search(depth, usedRows, usedCols) {
     if (depth === order.length) {
-      const room = roomGrid[positions[victim].row][positions[victim].col];
-      const together = positions.filter((cell) => roomGrid[cell.row][cell.col] === room).length;
-      if (together === 2) count++;
+      if (counts[roomGrid[positions[victim].row][positions[victim].col]] !== 2) return;
+      if (global.every((clue) => clueHolds(puzzle, clue, positions))) count++;
       return;
     }
     const person = order[depth];
     for (const cell of domains[person]) {
       if (usedRows & (1 << cell.row) || usedCols & (1 << cell.col)) continue;
+      const room = roomGrid[cell.row][cell.col];
+      if (counts[room] >= maxInRoom[room]) continue;
       positions[person] = cell;
-      const ok = binary.every((clue) => positions[clue.a] === undefined || positions[clue.b] === undefined || clueHolds(puzzle, clue, positions));
+      counts[room]++;
+      const victimCell = positions[victim];
+      const ok = (!victimCell || counts[roomGrid[victimCell.row][victimCell.col]] <= 2)
+        && binary.every((clue) => positions[clue.a] === undefined || positions[clue.b] === undefined || clueHolds(puzzle, clue, positions));
       if (ok) search(depth + 1, usedRows | (1 << cell.row), usedCols | (1 << cell.col));
+      counts[room]--;
       positions[person] = undefined;
       if (count >= limit) return;
     }
@@ -191,6 +273,9 @@ export function countSolutions(puzzle, clues = puzzle.clues, limit = 2) {
 // ---- Textos -------------------------------------------------------------------
 
 const ending = (person) => (person.gender === 'f' ? 'a' : 'o');
+const NUMBERS = ['ninguna', 'una', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho'];
+const rowsText = (distance) => (distance === 1 ? 'justo una fila' : `exactamente ${NUMBERS[distance]} filas`);
+const colsText = (distance) => (distance === 1 ? 'justo una columna' : `exactamente ${NUMBERS[distance]} columnas`);
 
 export function clueText(puzzle, clue) {
   const a = puzzle.people[clue.a];
@@ -203,12 +288,32 @@ export function clueText(puzzle, clue) {
       if (clue.object === 'cama') return `${a.name} estaba tumbad${ending(a)} en una cama.`;
       return `${a.name} estaba sentad${ending(a)} en ${OBJECTS[clue.object].name}.`;
     case 'besideObject': return `${a.name} estaba junto a ${OBJECTS[clue.object].name}.`;
+    case 'onFloor': return `${a.name} no estaba ni sentad${ending(a)} ni tumbad${ending(a)}: su casilla no tenía muebles.`;
     case 'row': return `${a.name} estaba en la fila ${clue.row + 1}.`;
     case 'col': return `${a.name} estaba en la columna ${String.fromCharCode(65 + clue.col)}.`;
+    case 'edge': return `${a.name} estaba pegad${ending(a)} a una pared exterior de la casa.`;
+    case 'notEdge': return `${a.name} no tocaba ninguna pared exterior de la casa.`;
+    case 'corner': return `${a.name} estaba en una esquina de la casa.`;
     case 'north': return clue.flip ? `${b.name} estaba más al sur que ${a.name}.` : `${a.name} estaba más al norte que ${b.name}.`;
     case 'west': return clue.flip ? `${b.name} estaba más al este que ${a.name}.` : `${a.name} estaba más al oeste que ${b.name}.`;
+    case 'northBy': return clue.flip
+      ? `${b.name} estaba ${rowsText(clue.distance)} más al sur que ${a.name}.`
+      : `${a.name} estaba ${rowsText(clue.distance)} más al norte que ${b.name}.`;
+    case 'westBy': return clue.flip
+      ? `${b.name} estaba ${colsText(clue.distance)} más al este que ${a.name}.`
+      : `${a.name} estaba ${colsText(clue.distance)} más al oeste que ${b.name}.`;
     case 'sameRoom': return `${a.name} y ${b.name} estaban en la misma habitación.`;
+    case 'differentRoom': return `${a.name} y ${b.name} estaban en habitaciones distintas.`;
     case 'diagonal': return `${a.name} y ${b.name} estaban en casillas que se tocan en diagonal.`;
+    case 'roomCount':
+      if (clue.count === 0) return `Nadie estuvo en ${room.article}.`;
+      if (clue.count === 1) return `En ${room.article} había una sola persona.`;
+      return `En ${room.article} había exactamente ${NUMBERS[clue.count]} personas.`;
+    case 'aloneInRoom': return `${a.name} estaba sol${ending(a)} en su habitación.`;
+    case 'emptyRooms':
+      if (clue.count === 0) return 'Ninguna habitación quedó vacía.';
+      if (clue.count === 1) return 'Exactamente una habitación quedó vacía.';
+      return `Exactamente ${NUMBERS[clue.count]} habitaciones quedaron vacías.`;
     default: return '';
   }
 }
@@ -216,33 +321,49 @@ export function clueText(puzzle, clue) {
 // ---- Generación ------------------------------------------------------------------
 
 function candidateClues(puzzle, types) {
-  const { people, solution, roomGrid, objects, rooms } = puzzle;
+  const { people, solution, objects, rooms } = puzzle;
   const pool = [];
   const add = (clue) => { if (types[clue.type]) pool.push({ ...clue, weight: types[clue.type] }); };
+  const counts = roomCounts(puzzle, solution);
   people.forEach((person, a) => {
     const cell = solution[a];
-    const room = roomGrid[cell.row][cell.col];
+    const room = roomOf(puzzle, cell);
     add({ type: 'inRoom', a, room });
     const others = shuffle(rooms.map((_, index) => index).filter((index) => index !== room));
     others.slice(0, 2).forEach((other) => add({ type: 'notInRoom', a, room: other }));
     if (objects[cell.row][cell.col]) add({ type: 'onObject', a, object: objects[cell.row][cell.col] });
+    else add({ type: 'onFloor', a });
     for (const object of Object.keys(OBJECTS)) {
       if (besideObject(puzzle, cell, object)) add({ type: 'besideObject', a, object });
     }
     add({ type: 'row', a, row: cell.row });
     add({ type: 'col', a, col: cell.col });
+    if (isCorner(puzzle, cell)) add({ type: 'corner', a });
+    else if (isEdge(puzzle, cell)) add({ type: 'edge', a });
+    else add({ type: 'notEdge', a });
+    if (!person.victim && counts[room] === 1) add({ type: 'aloneInRoom', a });
     people.forEach((other, b) => {
       if (a === b) return;
       const target = solution[b];
-      if (cell.row < target.row) add({ type: 'north', a, b, flip: random() < 0.5 });
-      if (cell.col < target.col) add({ type: 'west', a, b, flip: random() < 0.5 });
-      // Las pistas de relación con la víctima delatarían al culpable.
-      if (a < b && !person.victim && !other.victim) {
-        if (roomGrid[cell.row][cell.col] === roomGrid[target.row][target.col]) add({ type: 'sameRoom', a, b });
-        if (Math.abs(cell.row - target.row) === 1 && Math.abs(cell.col - target.col) === 1) add({ type: 'diagonal', a, b });
+      if (cell.row < target.row) {
+        add({ type: 'north', a, b, flip: random() < 0.5 });
+        if (target.row - cell.row <= 3) add({ type: 'northBy', a, b, distance: target.row - cell.row, flip: random() < 0.5 });
+      }
+      if (cell.col < target.col) {
+        add({ type: 'west', a, b, flip: random() < 0.5 });
+        if (target.col - cell.col <= 3) add({ type: 'westBy', a, b, distance: target.col - cell.col, flip: random() < 0.5 });
+      }
+      if (a < b) {
+        const same = room === roomOf(puzzle, target);
+        // Que alguien comparta habitación con la víctima delataría al culpable.
+        if (same && !person.victim && !other.victim) add({ type: 'sameRoom', a, b });
+        if (!same) add({ type: 'differentRoom', a, b });
+        if (!person.victim && !other.victim && Math.abs(cell.row - target.row) === 1 && Math.abs(cell.col - target.col) === 1) add({ type: 'diagonal', a, b });
       }
     });
   });
+  rooms.forEach((_, room) => add({ type: 'roomCount', room, count: counts[room] }));
+  add({ type: 'emptyRooms', count: counts.filter((count) => count === 0).length });
   // Orden aleatorio ponderado por tipo.
   return pool
     .map((clue) => ({ clue, key: random() ** (1 / clue.weight) }))
@@ -266,7 +387,7 @@ function chooseClues(puzzle, settings) {
   // Quita las pistas sobrantes (en fácil y media, cada persona conserva al menos una).
   for (const clue of shuffle(chosen)) {
     const rest = chosen.filter((item) => item !== clue);
-    const keepsVoice = !settings.everyoneSpeaks || rest.some((item) => item.a === clue.a);
+    const keepsVoice = !settings.everyoneSpeaks || clue.a === undefined || rest.some((item) => item.a === clue.a);
     if (keepsVoice && countSolutions(puzzle, rest) === 1) chosen.splice(chosen.indexOf(clue), 1);
   }
   return chosen;
@@ -309,22 +430,26 @@ function buildCase(settings) {
   const puzzle = { size, roomGrid, rooms, objects, people, solution, murderer, victim: victimIndex, crimeRoom, title, subtitle };
   const clues = chooseClues(puzzle, settings);
   if (!clues) return null;
+  const order = (clue) => (clue.subject === undefined ? people.length : clue.subject);
   return {
     ...puzzle,
     clues: clues
       .map(({ weight, ...clue }) => ({ ...clue, subject: clue.flip ? clue.b : clue.a, text: clueText(puzzle, clue) }))
-      .sort((x, y) => x.subject - y.subject),
+      .sort((x, y) => order(x) - order(y)),
   };
 }
 
-export function generatePuzzle(difficulty = 'media') {
+export function generatePuzzle(difficulty = 'media', seed = randomSeed()) {
   const settings = DIFFICULTIES[difficulty];
   if (!settings) throw new Error(`Dificultad desconocida: ${difficulty}`);
-  for (let attempt = 0; attempt < 500; attempt++) {
-    const puzzle = buildCase(settings);
-    if (puzzle) {
-      return { ...puzzle, difficulty, caseNumber: String(Math.floor(random() * 9000) + 1000) };
+  random = seededRandom(seed * 31 + Object.keys(DIFFICULTIES).indexOf(difficulty));
+  try {
+    for (let attempt = 0; attempt < 1000; attempt++) {
+      const puzzle = buildCase(settings);
+      if (puzzle) return { ...puzzle, difficulty, seed, caseNumber: String(seed) };
     }
+  } finally {
+    random = Math.random;
   }
   throw new Error('No se ha podido generar un caso.');
 }

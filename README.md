@@ -16,16 +16,40 @@ varias personas sospechosas y una víctima, todas representadas con emojis.
 
 El generador ([src/puzzle.js](src/puzzle.js)) crea el plano, coloca a las personas,
 elige pistas y comprueba con un solucionador que el caso tiene una única solución.
-Hay tres niveles:
+Cada caso sale de una semilla (el número de expediente): el mismo nivel y la misma
+semilla dan siempre el mismo caso. Hay cinco niveles:
 
 | Nivel   | Plano | Personas | Pistas |
 |---------|-------|----------|--------|
-| Fácil   | 4 × 4 | 4 | Directas (habitación, mueble, fila, columna) |
-| Media   | 5 × 5 | 5 | Añade «junto a», «no estuvo en» y «misma habitación» |
-| Difícil | 6 × 6 | 6 | Sin filas ni columnas; añade posiciones relativas (norte, este…) y diagonales |
+| Fácil   | 4 × 4 | 4 | Directas: habitación, mueble, fila, columna, esquina |
+| Media   | 5 × 5 | 5 | Añade «junto a», «no estuvo en», «misma habitación», paredes y recuentos |
+| Difícil | 6 × 6 | 6 | Sin filas ni columnas; añade norte/sur/este/oeste, diagonales, «a solas», «habitaciones distintas» |
+| Experto | 7 × 7 | 7 | Añade distancias exactas («justo una fila más al norte») y habitaciones vacías |
+| Maestro | 8 × 8 | 8 | Todas las anteriores, con más peso para las pistas de relación |
 
-El PDF (A4 horizontal) tiene dos hojas: el caso, con las reglas, las pistas, el plano y
-los implicados, y el solucionario, con el plano resuelto y la persona culpable.
+## Dos formas de jugar
+
+- **En papel:** la portada descarga un PDF A4 horizontal de dos hojas: el caso (reglas,
+  pistas, plano e implicados) y el solucionario. El pie de la primera hoja enlaza al
+  mismo caso en línea.
+- **En línea** (`jugar.html?nivel=…&caso=…`): se elige a una persona (o teclas 1–8) y se
+  toca su casilla; con «Descartar» (tecla X o clic derecho) se tachan casillas. Marca
+  las filas y columnas repetidas y, si se quiere, las pistas incumplidas. Incluye
+  deshacer, comprobar, ayudas, ver la solución, descargar el PDF y copiar el enlace.
+  Al completar el plano se acusa a la persona culpable. El avance se guarda en el
+  navegador.
+
+## Estructura
+
+| Archivo | Contenido |
+|---|---|
+| [src/puzzle.js](src/puzzle.js) | Generador, pistas y solucionador (sin DOM) |
+| [src/game.js](src/game.js) | Reglas de una partida en línea (sin DOM) |
+| [src/board.js](src/board.js) | Reglas, textos y pintado del plano compartidos |
+| [src/pdf.js](src/pdf.js) | PDF con jsPDF (los emojis se insertan como imágenes) |
+| [src/generate.js](src/generate.js), [src/puzzle.worker.js](src/puzzle.worker.js) | Generación en un Web Worker para no bloquear la página |
+| [src/main.js](src/main.js), [index.html](index.html) | Portada y descargas |
+| [src/play.js](src/play.js), [jugar.html](jugar.html), [src/play.css](src/play.css) | Juego en línea |
 
 ## Desarrollo
 

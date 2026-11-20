@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f5f2ea" />
+    <meta name="description" content="Resuelve en línea un misterio de Murdokuer: coloca a los implicados en el plano y descubre al culpable." />
+    <title>Murdokuer — juega en línea</title>
+  </head>
+  <body>
+    <div id="app">
+      <header class="site-header">
+        <a class="brand" href="./" aria-label="Murdokuer, inicio"><span class="brand-mark">M.</span> MURDOKUER</a>
+        <a class="header-link" href="./">← CASOS PARA IMPRIMIR</a>
+      </header>
+
+      <main class="game">
+        <section class="game-top">
+          <div>
+            <div class="eyebrow"><span></span> JUEGA EN LÍNEA</div>
+            <h1 class="game-title" id="case-title">Preparando el caso…</h1>
+            <div class="case-meta">
+              <span id="case-number">EXPEDIENTE Nº ——</span>
+              <span id="case-level"></span>
+              <span class="timer" aria-label="Tiempo de juego">⏱ <span id="timer">00:00</span></span>
+            </div>
+          </div>
+          <div class="game-levels">
+            <span class="section-kicker">NUEVO CASO</span>
+            <div id="level-picker" class="level-picker" role="group" aria-label="Nuevo caso por dificultad"></div>
+          </div>
+        </section>
+
+        <section class="game-layout">
+          <div class="board-panel">
+            <div class="tool-heading">
+              <span class="section-kicker">1. ELIGE A QUIÉN COLOCAR</span>
+              <span class="tool-help">Teclas 1–<span id="key-max">8</span> · X para descartar</span>
+            </div>
+            <div id="tools" class="tools" role="toolbar" aria-label="Personas y herramientas"></div>
+            <div class="section-kicker board-kicker">2. TOCA UNA CASILLA DEL PLANO</div>
+            <div id="board" class="board game-board" role="grid" aria-label="Plano de la casa"></div>
+            <p id="message" class="game-message" role="status" aria-live="polite"></p>
+          </div>
+
+          <aside class="side-panel">
+            <div class="panel-block">
+              <div class="panel-heading">
+                <span class="clue-heading">LAS PISTAS</span>
+                <label class="toggle"><input id="assist" type="checkbox" checked /> Marcar pistas incumplidas</label>
+              </div>
+              <ul id="clue-list" class="clue-list game-clues"></ul>
+              <p class="panel-note">Toca una pista para tacharla cuando ya la hayas usado.</p>
+            </div>
+
+            <div class="panel-block actions">
+              <button id="undo" type="button" class="ghost">↶ Deshacer</button>
+              <button id="check" type="button" class="ghost">✓ Comprobar</button>
+              <button id="hint" type="button" class="ghost">💡 Ayuda</button>
+              <button id="restart" type="button" class="ghost">⟲ Empezar de nuevo</button>
+              <button id="reveal" type="button" class="ghost">👁 Ver solución</button>
+              <button id="pdf" type="button" class="ghost">↓ PDF de este caso</button>
+              <button id="share" type="button" class="ghost">🔗 Copiar enlace</button>
+            </div>
+
+            <details class="panel-block rules-block">
+              <summary class="clue-heading">LAS REGLAS</summary>
+              <ol id="rules" class="rules"></ol>
+            </details>
+          </aside>
+        </section>
+      </main>
+
+      <dialog id="verdict" class="verdict" aria-labelledby="verdict-title">
+        <form method="dialog">
+          <div class="eyebrow"><span></span> TODO ENCAJA</div>
+          <h2 id="verdict-title">¿Quién es culpable?</h2>
+          <p id="verdict-text">Las piezas están en su sitio. Señala a la persona que estaba a solas con la víctima.</p>
+          <div id="suspects" class="suspect-choices"></div>
+          <div class="verdict-actions"><button value="close" class="ghost">Seguir mirando</button></div>
+        </form>
+      </dialog>
+
+      <footer><span>MURDOKUER</span><span>HECHO PARA DESCONECTAR Y DEDUCIR.</span></footer>
+    </div>
+    <script type="module" src="/src/play.js"></script>
+  </body>
+</html>

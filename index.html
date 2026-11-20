@@ -19,10 +19,10 @@
           <div class="eyebrow"><span></span> EL PASATIEMPO DETECTIVESCO</div>
           <h1>Un misterio en<br /><em>cada página.</em></h1>
           <p>Un crimen, una casa llena de sospechosos y un plano por resolver. Afila el lápiz: el siguiente caso te está esperando.</p>
-          <div class="levels" role="group" aria-label="Elige la dificultad del caso">
-            <button type="button" data-difficulty="facil"><span>↓</span> Fácil <small>4 × 4 · 4 personas</small></button>
-            <button type="button" data-difficulty="media"><span>↓</span> Media <small>5 × 5 · 5 personas</small></button>
-            <button type="button" data-difficulty="dificil"><span>↓</span> Difícil <small>6 × 6 · 6 personas</small></button>
+          <div class="cta-group">
+            <a class="play-button" href="jugar.html"><span>▶</span> Jugar en línea <small>sin imprimir nada</small></a>
+            <div class="cta-or">o descarga un caso para imprimir</div>
+            <div id="levels" class="levels" role="group" aria-label="Descargar un caso por dificultad"></div>
           </div>
           <div class="download-note">PDF GRATIS · CASO + SOLUCIONARIO · LISTO PARA IMPRIMIR</div>
           <p id="status" class="status" role="status" aria-live="polite"></p>
@@ -40,7 +40,7 @@
                 <div class="clues">
                   <div class="case-label">EL CASO</div>
                   <h3 id="case-title"></h3>
-                  <p class="story">Esta noche alguien no salió con vida de la casa. Ordena a los implicados en el plano y descubre quién se quedó a solas con la víctima.</p>
+                  <p id="story" class="story"></p>
                   <div class="clue-heading">01 / LAS REGLAS</div>
                   <ol id="rules" class="rules"></ol>
                   <div class="clue-heading">02 / LAS PISTAS</div>
@@ -56,7 +56,7 @@
               <div class="paper-bottom"><span>MURDOKUER · EL ARTE DE DEDUCIR</span><span>01 / 02</span></div>
             </article>
           </div>
-          <p class="preview-caption"><span>✳</span> Cada descarga genera un caso nuevo, listo para imprimir.</p>
+          <p class="preview-caption"><span>✳</span> Cada descarga genera un caso nuevo, listo para imprimir. <a id="play-preview" href="jugar.html">Jugar este caso en línea →</a></p>
         </section>
       </main>
       <footer><span>MURDOKUER</span><span>HECHO PARA DESCONECTAR Y DEDUCIR.</span></footer>
