@@ -1,69 +1,72 @@
 <!doctype html>
-<html lang="es">
+<html lang="gl">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#f5f2ea" />
-    <meta name="description" content="Un pequeño misterio para imprimir y resolver." />
-    <title>Murdokuer — un misterio en cada página</title>
+    <meta name="description" content="Un pequeno misterio para imprimir ou xogar en liña." data-i18n-attr="content:metaDescHome" />
+    <title>Murdokuer — un misterio en cada páxina</title>
   </head>
   <body>
     <div id="app">
       <header class="site-header">
-        <a class="brand" href="./" aria-label="Murdokuer, inicio"><span class="brand-mark">M.</span> MURDOKUER</a>
-        <span class="header-note">PARA MENTES CURIOSAS</span>
+        <a class="brand" href="./" aria-label="Murdokuer, inicio" data-i18n-attr="aria-label:homeAria"><span class="brand-mark">M.</span> MURDOKUER</a>
+        <div class="header-tools">
+          <span class="header-note" data-i18n="headerNote">PARA MENTES CURIOSAS</span>
+          <div id="language"></div>
+        </div>
       </header>
 
       <main>
         <section class="intro">
-          <div class="eyebrow"><span></span> EL PASATIEMPO DETECTIVESCO</div>
-          <h1>Un misterio en<br /><em>cada página.</em></h1>
-          <p>Un crimen, una casa llena de sospechosos y un plano por resolver. Afila el lápiz: el siguiente caso te está esperando.</p>
+          <div class="eyebrow"><span></span> <span data-i18n="eyebrow">O PASATEMPO DETECTIVESCO</span></div>
+          <h1 data-i18n-html="heroHtml">Un misterio en<br /><em>cada páxina.</em></h1>
+          <p data-i18n="heroText">Un crime, unha casa chea de sospeitosos e un plano por resolver. Afia o lapis: o seguinte caso está á túa espera.</p>
           <div class="cta-group">
-            <a class="play-button" href="jugar.html"><span>▶</span> Jugar en línea <small>sin imprimir nada</small></a>
-            <div class="cta-or">o descarga un caso para imprimir</div>
-            <div id="levels" class="levels" role="group" aria-label="Descargar un caso por dificultad"></div>
+            <a class="play-button" href="jugar.html"><span>▶</span> <span data-i18n="playButton">Xogar en liña</span> <small data-i18n="playButtonNote">sen imprimir nada</small></a>
+            <div class="cta-or" data-i18n="ctaOr">ou descarga un caso para imprimir</div>
+            <div id="levels" class="levels" role="group" aria-label="Descargar un caso segundo a dificultade" data-i18n-attr="aria-label:levelsAria"></div>
           </div>
-          <div class="download-note">PDF GRATIS · CASO + SOLUCIONARIO · ¿VARIOS? <a href="#booklet-title">PREPARA UN CUADERNILLO ↓</a></div>
+          <div class="download-note"><span data-i18n="downloadNote">PDF GRATUÍTO · CASO + SOLUCIÓN · VARIOS?</span> <a href="#booklet-title" data-i18n="downloadNoteLink">PREPARA UN CADERNO ↓</a></div>
           <p id="status" class="status" role="status" aria-live="polite"></p>
         </section>
 
         <section class="booklet" aria-labelledby="booklet-title">
           <div class="booklet-card">
             <div class="booklet-intro">
-              <span class="section-kicker">PARA IMPRIMIR VARIOS DE UNA VEZ</span>
-              <h2 id="booklet-title">Prepara un cuadernillo</h2>
-              <p>Varios casos en un solo PDF. Cada caso ocupa una página y su solución la siguiente, así que al imprimir a doble cara la solución queda en el reverso.</p>
+              <span class="section-kicker" data-i18n="bookletKicker">PARA IMPRIMIR VARIOS Á VEZ</span>
+              <h2 id="booklet-title" data-i18n="bookletTitle">Prepara un caderno</h2>
+              <p data-i18n="bookletIntro">Varios casos nun só PDF. Cada caso ocupa unha páxina e a súa solución a seguinte, así que ao imprimir a dobre cara a solución queda no reverso.</p>
               <ul class="booklet-tips">
-                <li><span>🖨️</span> Imprime a doble cara, volteando por el borde corto.</li>
-                <li><span>✂</span> Cada hoja es un caso completo: se puede repartir suelta.</li>
-                <li><span>▶</span> Cada caso trae su enlace para jugarlo también en línea.</li>
+                <li><span>🖨️</span> <span data-i18n="tipPrint">Imprime a dobre cara, virando a folla polo bordo curto.</span></li>
+                <li><span>✂</span> <span data-i18n="tipLoose">Cada folla é un caso completo: pódese repartir solta.</span></li>
+                <li><span>▶</span> <span data-i18n="tipOnline">Cada caso inclúe a súa ligazón para xogalo tamén en liña.</span></li>
               </ul>
             </div>
             <form id="booklet-form" class="booklet-form" novalidate>
               <fieldset class="booklet-levels">
-                <legend>1. Dificultad</legend>
+                <legend data-i18n="bookletLevelLegend">1. Dificultade</legend>
                 <div id="booklet-levels" class="booklet-options"></div>
               </fieldset>
               <div class="booklet-count">
-                <label for="booklet-count">2. Número de casos</label>
+                <label for="booklet-count" data-i18n="bookletCountLabel">2. Número de casos</label>
                 <div class="count-row">
                   <div class="stepper">
-                    <button type="button" id="count-minus" aria-label="Un caso menos">−</button>
+                    <button type="button" id="count-minus" aria-label="Un caso menos" data-i18n-attr="aria-label:countMinus">−</button>
                     <input id="booklet-count" type="number" inputmode="numeric" aria-describedby="booklet-limit" />
-                    <button type="button" id="count-plus" aria-label="Un caso más">+</button>
+                    <button type="button" id="count-plus" aria-label="Un caso máis" data-i18n-attr="aria-label:countPlus">+</button>
                   </div>
-                  <input id="booklet-range" type="range" aria-label="Número de casos" />
+                  <input id="booklet-range" type="range" aria-label="Número de casos" data-i18n-attr="aria-label:countRange" />
                 </div>
                 <small id="booklet-limit" class="booklet-limit"></small>
               </div>
               <p id="booklet-summary" class="booklet-summary"></p>
-              <button type="submit" id="booklet-submit" class="booklet-submit"><span>↓</span> Descargar cuadernillo</button>
+              <button type="submit" id="booklet-submit" class="booklet-submit"><span>↓</span> <span data-i18n="bookletSubmit">Descargar o caderno</span></button>
               <div id="booklet-progress" class="booklet-progress" hidden>
                 <div class="progress-bar" role="progressbar" aria-labelledby="booklet-progress-text" aria-valuemin="0" aria-valuemax="100"><span id="booklet-bar"></span></div>
                 <div class="progress-row">
                   <span id="booklet-progress-text"></span>
-                  <button type="button" id="booklet-cancel" class="link-button">Cancelar</button>
+                  <button type="button" id="booklet-cancel" class="link-button" data-i18n="cancel">Cancelar</button>
                 </div>
               </div>
               <p id="booklet-status" class="booklet-status" role="status" aria-live="polite"></p>
@@ -73,36 +76,36 @@
 
         <section class="preview-section" aria-labelledby="preview-title">
           <div class="section-heading">
-            <div><span class="section-kicker">UN VISTAZO AL INTERIOR</span><h2 id="preview-title">Tu próximo caso</h2></div>
-            <span class="preview-label"><span></span> VISTA PREVIA</span>
+            <div><span class="section-kicker" data-i18n="previewKicker">UNHA OLLADA AO INTERIOR</span><h2 id="preview-title" data-i18n="previewTitle">O teu próximo caso</h2></div>
+            <span class="preview-label"><span></span> <span data-i18n="previewLabel">VISTA PREVIA</span></span>
           </div>
           <div class="paper-wrap">
-            <article class="paper" aria-label="Ejemplo de la primera página del PDF">
+            <article class="paper" aria-label="Exemplo da primeira páxina do PDF" data-i18n-attr="aria-label:paperAria">
               <div class="paper-top"><strong>MURDOKUER <span id="case-number"></span></strong><span id="case-level"></span></div>
               <div class="paper-content">
                 <div class="clues">
-                  <div class="case-label">EL CASO</div>
+                  <div class="case-label" data-i18n="caseLabel">O CASO</div>
                   <h3 id="case-title"></h3>
                   <p id="story" class="story"></p>
-                  <div class="clue-heading">01 / LAS REGLAS</div>
+                  <div class="clue-heading" data-i18n="rulesHeading">01 / AS REGRAS</div>
                   <ol id="rules" class="rules"></ol>
-                  <div class="clue-heading">02 / LAS PISTAS</div>
+                  <div class="clue-heading" data-i18n="cluesHeading">02 / AS PISTAS</div>
                   <ul id="clue-list" class="clue-list"></ul>
                 </div>
                 <div class="board-area">
-                  <div class="board-heading"><span>EL PLANO</span><span>PIENSA CON CALMA</span></div>
+                  <div class="board-heading"><span data-i18n="boardHeading">O PLANO</span><span data-i18n="thinkCalm">PENSA CON CALMA</span></div>
                   <div id="board" class="board" role="img"></div>
-                  <div class="clue-heading">03 / LOS IMPLICADOS</div>
+                  <div class="clue-heading" data-i18n="peopleHeading">03 / OS IMPLICADOS</div>
                   <div id="people" class="people"></div>
                 </div>
               </div>
-              <div class="paper-bottom"><span>MURDOKUER · EL ARTE DE DEDUCIR</span><span>01 / 02</span></div>
+              <div class="paper-bottom"><span data-i18n="paperFooter">MURDOKUER · A ARTE DE DEDUCIR</span><span>01 / 02</span></div>
             </article>
           </div>
-          <p class="preview-caption"><span>✳</span> Cada descarga genera un caso nuevo, listo para imprimir. <a id="play-preview" href="jugar.html">Jugar este caso en línea →</a></p>
+          <p class="preview-caption"><span>✳</span> <span data-i18n="previewCaption">Cada descarga xera un caso novo, preparado para imprimir.</span> <a id="play-preview" href="jugar.html" data-i18n="playThisCase">Xogar este caso en liña →</a></p>
         </section>
       </main>
-      <footer><span>MURDOKUER</span><span>HECHO PARA DESCONECTAR Y DEDUCIR.</span></footer>
+      <footer><span>MURDOKUER</span><span data-i18n="footerTag">FEITO PARA DESCONECTAR E DEDUCIR.</span></footer>
     </div>
     <script type="module" src="/src/main.js"></script>
   </body>

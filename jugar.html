@@ -1,70 +1,73 @@
 <!doctype html>
-<html lang="es">
+<html lang="gl">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#f5f2ea" />
-    <meta name="description" content="Resuelve en línea un misterio de Murdokuer: coloca a los implicados en el plano y descubre al culpable." />
-    <title>Murdokuer — juega en línea</title>
+    <meta name="description" content="Resolve en liña un misterio de Murdokuer: coloca os implicados no plano e descobre quen é culpable." data-i18n-attr="content:metaDescPlay" />
+    <title>Murdokuer — xoga en liña</title>
   </head>
   <body>
     <div id="app">
       <header class="site-header">
-        <a class="brand" href="./" aria-label="Murdokuer, inicio"><span class="brand-mark">M.</span> MURDOKUER</a>
-        <a class="header-link" href="./">← CASOS PARA IMPRIMIR</a>
+        <a class="brand" href="./" aria-label="Murdokuer, inicio" data-i18n-attr="aria-label:homeAria"><span class="brand-mark">M.</span> MURDOKUER</a>
+        <div class="header-tools">
+          <a class="header-link" href="./" data-i18n="backToPrint">← CASOS PARA IMPRIMIR</a>
+          <div id="language"></div>
+        </div>
       </header>
 
       <main class="game">
         <section class="game-top">
           <div>
-            <div class="eyebrow"><span></span> JUEGA EN LÍNEA</div>
-            <h1 class="game-title" id="case-title">Preparando el caso…</h1>
+            <div class="eyebrow"><span></span> <span data-i18n="playEyebrow">XOGA EN LIÑA</span></div>
+            <h1 class="game-title" id="case-title" data-i18n="loadingTitle">Preparando o caso…</h1>
             <div class="case-meta">
-              <span id="case-number">EXPEDIENTE Nº ——</span>
+              <span id="case-number">—</span>
               <span id="case-level"></span>
-              <span class="timer" aria-label="Tiempo de juego">⏱ <span id="timer">00:00</span></span>
+              <span class="timer" aria-label="Tempo de xogo" data-i18n-attr="aria-label:timerAria">⏱ <span id="timer">00:00</span></span>
             </div>
           </div>
           <div class="game-levels">
-            <span class="section-kicker">NUEVO CASO</span>
-            <div id="level-picker" class="level-picker" role="group" aria-label="Nuevo caso por dificultad"></div>
+            <span class="section-kicker" data-i18n="newCase">NOVO CASO</span>
+            <div id="level-picker" class="level-picker" role="group" aria-label="Novo caso segundo a dificultade" data-i18n-attr="aria-label:levelPickerAria"></div>
           </div>
         </section>
 
         <section class="game-layout">
           <div class="board-panel">
             <div class="tool-heading">
-              <span class="section-kicker">1. ELIGE A QUIÉN COLOCAR</span>
-              <span class="tool-help">Teclas 1–<span id="key-max">8</span> · X para descartar</span>
+              <span class="section-kicker" data-i18n="step1">1. ESCOLLE A QUEN COLOCAR</span>
+              <span id="keys-help" class="tool-help"></span>
             </div>
-            <div id="tools" class="tools" role="toolbar" aria-label="Personas y herramientas"></div>
-            <div class="section-kicker board-kicker">2. TOCA UNA CASILLA DEL PLANO</div>
-            <div id="board" class="board game-board" role="grid" aria-label="Plano de la casa"></div>
+            <div id="tools" class="tools" role="toolbar" aria-label="Persoas e ferramentas" data-i18n-attr="aria-label:toolsAria"></div>
+            <div class="section-kicker board-kicker" data-i18n="step2">2. TOCA UNHA CELA DO PLANO</div>
+            <div id="board" class="board game-board" role="grid" aria-label="Plano da casa" data-i18n-attr="aria-label:boardAriaPlay"></div>
             <p id="message" class="game-message" role="status" aria-live="polite"></p>
           </div>
 
           <aside class="side-panel">
             <div class="panel-block">
               <div class="panel-heading">
-                <span class="clue-heading">LAS PISTAS</span>
-                <label class="toggle"><input id="assist" type="checkbox" checked /> Marcar pistas incumplidas</label>
+                <span class="clue-heading" data-i18n="cluesTitle">AS PISTAS</span>
+                <label class="toggle"><input id="assist" type="checkbox" checked /> <span data-i18n="assist">Marcar as pistas que non se cumpren</span></label>
               </div>
               <ul id="clue-list" class="clue-list game-clues"></ul>
-              <p class="panel-note">Toca una pista para tacharla cuando ya la hayas usado.</p>
+              <p class="panel-note" data-i18n="cluesNote">Toca unha pista para riscala cando xa a usases.</p>
             </div>
 
             <div class="panel-block actions">
-              <button id="undo" type="button" class="ghost">↶ Deshacer</button>
-              <button id="check" type="button" class="ghost">✓ Comprobar</button>
-              <button id="hint" type="button" class="ghost">💡 Ayuda</button>
-              <button id="restart" type="button" class="ghost">⟲ Empezar de nuevo</button>
-              <button id="reveal" type="button" class="ghost">👁 Ver solución</button>
-              <button id="pdf" type="button" class="ghost">↓ PDF de este caso</button>
-              <button id="share" type="button" class="ghost">🔗 Copiar enlace</button>
+              <button id="undo" type="button" class="ghost" data-i18n="undo">↶ Desfacer</button>
+              <button id="check" type="button" class="ghost" data-i18n="check">✓ Comprobar</button>
+              <button id="hint" type="button" class="ghost" data-i18n="hint">💡 Axuda</button>
+              <button id="restart" type="button" class="ghost" data-i18n="restart">⟲ Comezar de novo</button>
+              <button id="reveal" type="button" class="ghost" data-i18n="reveal">👁 Ver a solución</button>
+              <button id="pdf" type="button" class="ghost" data-i18n="pdfThis">↓ PDF deste caso</button>
+              <button id="share" type="button" class="ghost" data-i18n="share">🔗 Copiar a ligazón</button>
             </div>
 
             <details class="panel-block rules-block">
-              <summary class="clue-heading">LAS REGLAS</summary>
+              <summary class="clue-heading" data-i18n="rulesTitle">AS REGRAS</summary>
               <ol id="rules" class="rules"></ol>
             </details>
           </aside>
@@ -73,15 +76,15 @@
 
       <dialog id="verdict" class="verdict" aria-labelledby="verdict-title">
         <form method="dialog">
-          <div class="eyebrow"><span></span> TODO ENCAJA</div>
-          <h2 id="verdict-title">¿Quién es culpable?</h2>
-          <p id="verdict-text">Las piezas están en su sitio. Señala a la persona que estaba a solas con la víctima.</p>
+          <div class="eyebrow"><span></span> <span id="verdict-eyebrow" data-i18n="verdictEyebrow">TODO ENCAIXA</span></div>
+          <h2 id="verdict-title" data-i18n="verdictQuestion">Quen é culpable?</h2>
+          <p id="verdict-text" data-i18n="verdictPrompt">As pezas están no seu sitio. Sinala a persoa que estaba a soas coa vítima.</p>
           <div id="suspects" class="suspect-choices"></div>
-          <div class="verdict-actions"><button value="close" class="ghost">Seguir mirando</button></div>
+          <div class="verdict-actions"><button value="close" class="ghost" data-i18n="keepLooking">Seguir mirando</button></div>
         </form>
       </dialog>
 
-      <footer><span>MURDOKUER</span><span>HECHO PARA DESCONECTAR Y DEDUCIR.</span></footer>
+      <footer><span>MURDOKUER</span><span data-i18n="footerTag">FEITO PARA DESCONECTAR E DEDUCIR.</span></footer>
     </div>
     <script type="module" src="/src/play.js"></script>
   </body>

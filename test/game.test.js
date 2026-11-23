@@ -30,7 +30,7 @@ test('no se puede colocar a nadie sobre muebles bloqueantes', () => {
   const blocked = puzzle.objects.flatMap((row, r) => row.flatMap((_, c) => (canOccupy(puzzle, { row: r, col: c }) ? [] : [{ row: r, col: c }])));
   if (!blocked.length) return;
   const game = newGame(puzzle);
-  assert.match(place(puzzle, game, 0, blocked[0]), /mueble/);
+  assert.equal(place(puzzle, game, 0, blocked[0]), 'blocked');
   assert.equal(game.placements[0], null);
 });
 
@@ -64,7 +64,7 @@ test('la solución cumple todas las pistas y las ayudas llevan a ella', () => {
   assert.equal(game.hintsUsed, puzzle.people.length);
   assert.ok(clueStatus(puzzle, game).every((status) => status === 'ok'));
   // Las personas confirmadas por una ayuda no se pueden mover.
-  assert.match(place(puzzle, game, 0, freeCell()), /ayuda/);
+  assert.equal(place(puzzle, game, 0, freeCell()), 'locked');
 });
 
 test('las colocaciones erróneas se detectan y la ayuda las corrige primero', () => {

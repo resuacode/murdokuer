@@ -29,8 +29,7 @@ for (const [difficulty, settings] of Object.entries(DIFFICULTIES)) {
       // Todas las pistas son ciertas y bastan para una única solución.
       assert.ok(puzzle.clues.length > 0);
       for (const clue of puzzle.clues) {
-        assert.ok(clueHolds(puzzle, clue, solution), clue.text);
-        assert.ok(clue.text.length > 0);
+        assert.ok(clueHolds(puzzle, clue, solution), JSON.stringify(clue));
       }
       assert.equal(countSolutions(puzzle), 1);
       if (settings.size >= 6) assert.ok(puzzle.clues.every((clue) => clue.type !== 'row' && clue.type !== 'col'));

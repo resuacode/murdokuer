@@ -32,9 +32,3 @@ export function estimateSeconds(levels, workers = 1) {
   const generation = levels.reduce((sum, level) => sum + COST[level], 0) / Math.max(1, workers);
   return (generation + levels.length * PDF_COST) / 1000;
 }
-
-export function describeEstimate(seconds) {
-  if (seconds < 3) return 'unos segundos';
-  if (seconds < 60) return `unos ${Math.ceil(seconds / 5) * 5} s`;
-  return `más de un minuto`;
-}

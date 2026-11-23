@@ -20,17 +20,18 @@ export function personAt(game, row, col) {
   return game.placements.findIndex((cell) => sameCell(cell, { row, col }));
 }
 
-// Coloca a una persona (o la quita si ya estaba ahí). Devuelve un mensaje si no se puede.
+// Coloca a una persona (o la quita si ya estaba ahí).
+// Si no se puede, devuelve un código: 'locked', 'lockedCell' o 'blocked'.
 export function place(puzzle, game, person, cell) {
-  if (game.locked.includes(person)) return 'Esa persona ya está confirmada por una ayuda.';
-  if (!canOccupy(puzzle, cell)) return 'Nadie puede estar en esa casilla: el mueble lo impide.';
+  if (game.locked.includes(person)) return 'locked';
+  if (!canOccupy(puzzle, cell)) return 'blocked';
   if (sameCell(game.placements[person], cell)) {
     game.placements[person] = null;
     return null;
   }
   const other = personAt(game, cell.row, cell.col);
   if (other !== -1) {
-    if (game.locked.includes(other)) return 'Esa casilla ya está confirmada por una ayuda.';
+    if (game.locked.includes(other)) return 'lockedCell';
     game.placements[other] = null;
   }
   game.placements[person] = { row: cell.row, col: cell.col };

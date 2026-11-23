@@ -45,6 +45,33 @@ semilla dan siempre el mismo caso. Hay cinco niveles:
   Al completar el plano se acusa a la persona culpable. El avance se guarda en el
   navegador.
 
+## Idiomas
+
+La web, el juego en línea y los PDF están en **gallego** (idioma por defecto), español,
+inglés, francés y portugués europeo. El idioma se elige en el desplegable de la barra
+superior, se recuerda en el navegador y viaja en los enlaces de cada caso (`?lang=`), de
+modo que un PDF descargado en gallego enlaza al mismo caso en gallego.
+
+El generador no produce texto: guarda identificadores (habitaciones, personas, muebles,
+título) y las pistas como datos. Cada idioma ([src/i18n/locales](src/i18n/locales)) tiene
+su propia gramática (género, contracciones, números en femenino, elisión en francés), así
+que el mismo caso se puede leer en cualquier idioma.
+
+Notas de localización:
+
+- **Gallego** (norma RAG): términos comprobados en el Dicionario da RAG: «cela» para cada
+  casilla (no «casa», que aquí sería ambiguo), «faiado», «estante», «leste», «ligazón»,
+  «invernadoiro», «vítima». Sin preposición «a» ante complemento directo de persona y sin
+  signos de apertura de interrogación o exclamación.
+- **Portugués** europeo (AO 1990): «divisão» para cada habitación, «quadrícula» para cada
+  casilla y «mapa» en lugar de «planta» para no confundirlo con el objeto.
+- **Francés**: «vous», espacio de no separación ante «: ? !» y comillas « ».
+- **Inglés** británico.
+
+[test/i18n.test.js](test/i18n.test.js) comprueba que todos los idiomas tienen los mismos
+textos que el gallego, que cada tipo de pista da una frase completa en cada idioma y que
+no se mezclan formas castellanas o portuguesas en el gallego (ni gallegas en el portugués).
+
 ## Estructura
 
 | Archivo | Contenido |
@@ -53,6 +80,7 @@ semilla dan siempre el mismo caso. Hay cinco niveles:
 | [src/game.js](src/game.js) | Reglas de una partida en línea (sin DOM) |
 | [src/board.js](src/board.js) | Reglas, textos y pintado del plano compartidos |
 | [src/pdf.js](src/pdf.js) | PDF con jsPDF (los emojis se insertan como imágenes) |
+| [src/i18n/](src/i18n/) | Idioma activo, desplegable y textos de cada idioma |
 | [src/booklet.js](src/booklet.js) | Límites, reparto de niveles y estimación de tiempo de los cuadernillos |
 | [src/generate.js](src/generate.js), [src/puzzle.worker.js](src/puzzle.worker.js) | Generación en un Web Worker para no bloquear la página |
 | [src/main.js](src/main.js), [index.html](index.html) | Portada y descargas |

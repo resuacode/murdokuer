@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { BOOKLET_LIMITS, BOOKLET_MIN, MIXED, bookletLevels, clampCount, describeEstimate, estimateSeconds } from '../src/booklet.js';
+import { BOOKLET_LIMITS, BOOKLET_MIN, MIXED, bookletLevels, clampCount, estimateSeconds } from '../src/booklet.js';
 import { DIFFICULTIES } from '../src/puzzle.js';
 
 test('la cantidad se ajusta a los límites de cada nivel', () => {
@@ -29,6 +29,4 @@ test('los límites mantienen la espera por debajo de unos 10 segundos incluso en
     const seconds = estimateSeconds(bookletLevels(key, BOOKLET_LIMITS[key]), 1);
     assert.ok(seconds <= 10, `${key}: ${seconds}s`);
   }
-  assert.equal(describeEstimate(1), 'unos segundos');
-  assert.equal(describeEstimate(7), 'unos 10 s');
 });

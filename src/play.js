@@ -1,9 +1,11 @@
-import { DIFFICULTIES, OBJECTS, canOccupy, cellLabel } from './puzzle.js';
-import { levelLabel, playUrl, renderBoard, renderClues, renderRules } from './board.js';
+import { DIFFICULTIES, canOccupy, cellLabel } from './puzzle.js';
+import { caseTitle, levelLabel, personText, playUrl, renderBoard, renderClues, renderRules, roomText } from './board.js';
 import { createPuzzle } from './generate.js';
 import {
   clueStatus, conflicts, formatTime, giveHint, isComplete, isSolved, newGame, personAt, place, remove, reveal, toggleMark, wrongPlacements,
 } from './game.js';
+import { locale, mountLanguagePicker, onLocaleChange, t, translateDocument } from './i18n/index.js';
+import { levelName, objectText } from './i18n/content.js';
 import './style.css';
 import './play.css';
 
@@ -15,7 +17,7 @@ const elements = {
   timer: $('#timer'),
   levels: $('#level-picker'),
   tools: $('#tools'),
-  keyMax: $('#key-max'),
+  keysHelp: $('#keys-help'),
   board: $('#board'),
   message: $('#message'),
   clues: $('#clue-list'),
@@ -23,6 +25,7 @@ const elements = {
   verdict: $('#verdict'),
   verdictTitle: $('#verdict-title'),
   verdictText: $('#verdict-text'),
+  verdictEyebrow: $('#verdict-eyebrow'),
   suspects: $('#suspects'),
 };
 
@@ -33,6 +36,11 @@ let tool = 0;
 let history = [];
 let highlighted = new Set();
 let focusIndex = 0;
+// Último mensaje y estado del diálogo, guardados como clave + datos para poder traducirlos.
+let message = null;
+let verdict = null;
+
+const person = (index) => personText(puzzle, index, locale());
 
 // ---- Guardado local (comodidad: si falla, la partida sigue funcionando) ----------
 
@@ -54,19 +62,24 @@ function readPreference(key) {
   try { return localStorage.getItem(`murdokuer:${key}`); } catch { return null; }
 }
 
+// ---- Mensajes -----------------------------------------------------------------------
+
+// `say(() => texto)`: la función se vuelve a evaluar si cambia el idioma.
+function say(build) {
+  message = build;
+  elements.message.textContent = build ? build() : '';
+}
+const sayKey = (key, ...args) => say(() => t(key, ...args));
+
 // ---- Pintado ------------------------------------------------------------------------
 
-function say(text) {
-  elements.message.textContent = text;
-}
-
 function renderHeader() {
-  elements.title.innerHTML = '';
-  elements.title.append(puzzle.title, ' ', Object.assign(document.createElement('em'), { textContent: puzzle.subtitle }));
-  elements.number.textContent = `EXPEDIENTE Nº ${puzzle.caseNumber}`;
-  elements.level.textContent = `DIFICULTAD ${levelLabel(puzzle).toUpperCase()} · ${puzzle.size} × ${puzzle.size}`;
-  elements.keyMax.textContent = puzzle.people.length;
-  document.title = `${puzzle.title} ${puzzle.subtitle} — Murdokuer`;
+  const { title, subtitle } = caseTitle(puzzle);
+  elements.title.replaceChildren(title, ' ', Object.assign(document.createElement('em'), { textContent: subtitle }));
+  elements.number.textContent = t('caseNumber', puzzle.caseNumber);
+  elements.level.textContent = t('levelLine', levelLabel(puzzle).toUpperCase(), puzzle.size);
+  elements.keysHelp.textContent = t('keysHelp', puzzle.people.length);
+  document.title = t('playDocTitle', `${title} ${subtitle}`);
   for (const button of elements.levels.querySelectorAll('button')) {
     button.setAttribute('aria-pressed', String(button.dataset.difficulty === puzzle.difficulty));
   }
@@ -75,21 +88,22 @@ function renderHeader() {
 function renderTools() {
   const clashes = conflicts(game);
   elements.tools.replaceChildren();
-  puzzle.people.forEach((person, index) => {
+  puzzle.people.forEach((_, index) => {
+    const who = person(index);
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'tool person-tool';
-    if (person.victim) button.classList.add('victim');
+    if (who.victim) button.classList.add('victim');
     if (game.placements[index]) button.classList.add('placed');
     if (clashes.has(index)) button.classList.add('clash');
     if (game.locked.includes(index)) button.classList.add('locked');
     button.setAttribute('aria-pressed', String(tool === index));
-    const where = game.placements[index] ? cellLabel(game.placements[index]) : 'sin colocar';
-    button.title = `${person.name}, ${person.role}${person.victim ? ' (víctima)' : ''} · ${where}`;
+    const where = game.placements[index] ? cellLabel(game.placements[index]) : t('unplaced');
+    button.title = t('toolTitle', who.name, who.role, who.victim, where);
     button.innerHTML = '<span class="emoji"></span><span class="tool-text"><b></b><small></small></span><kbd></kbd>';
-    button.querySelector('.emoji').textContent = person.emoji;
-    button.querySelector('b').textContent = person.name;
-    button.querySelector('small').textContent = game.placements[index] ? where : person.victim ? 'víctima' : person.role;
+    button.querySelector('.emoji').textContent = who.emoji;
+    button.querySelector('b').textContent = who.name;
+    button.querySelector('small').textContent = game.placements[index] ? where : who.victim ? t('victimTag') : who.role;
     button.querySelector('kbd').textContent = index + 1;
     button.addEventListener('click', () => selectTool(index));
     elements.tools.append(button);
@@ -98,49 +112,54 @@ function renderTools() {
   mark.type = 'button';
   mark.className = 'tool mark-tool';
   mark.setAttribute('aria-pressed', String(tool === MARK));
-  mark.innerHTML = '<span class="emoji">✕</span><span class="tool-text"><b>Descartar</b><small>tacha casillas</small></span><kbd>X</kbd>';
+  mark.innerHTML = '<span class="emoji">✕</span><span class="tool-text"><b></b><small></small></span><kbd>X</kbd>';
+  mark.querySelector('b').textContent = t('markTool');
+  mark.querySelector('small').textContent = t('markNote');
   mark.addEventListener('click', () => selectTool(MARK));
   elements.tools.append(mark);
 }
 
 function renderGameBoard() {
   const clashes = conflicts(game);
+  const code = locale();
   const cells = renderBoard(elements.board, puzzle, {
     cellTag: 'button',
     decorate(cell, row, col) {
       const index = row * puzzle.size + col;
-      const person = personAt(game, row, col);
+      const occupant = personAt(game, row, col);
       const object = puzzle.objects[row][col];
-      const room = puzzle.rooms[puzzle.roomGrid[row][col]].name;
       cell.dataset.index = index;
       cell.tabIndex = index === focusIndex ? 0 : -1;
       cell.setAttribute('role', 'gridcell');
-      let label = `${cellLabel({ row, col })}, ${room}`;
-      if (object) label += `, ${OBJECTS[object].name.replace(/^una? /, '')}`;
       if (!canOccupy(puzzle, { row, col })) cell.classList.add('blocked');
-      if (person !== -1) {
+      const discarded = occupant === -1 && game.marks.includes(`${row},${col}`);
+      if (occupant !== -1) {
         const token = document.createElement('span');
         token.className = 'token';
-        token.textContent = puzzle.people[person].emoji;
+        token.textContent = puzzle.people[occupant].emoji;
         cell.append(token);
         cell.classList.add('occupied');
-        if (clashes.has(person)) cell.classList.add('clash');
-        if (highlighted.has(person)) cell.classList.add('wrong');
-        if (game.locked.includes(person)) cell.classList.add('locked');
-        if (game.finished && (person === puzzle.murderer || person === puzzle.victim)) cell.classList.add(person === puzzle.victim ? 'is-victim' : 'is-murderer');
-        label += `: ${puzzle.people[person].name}`;
-      } else if (game.marks.includes(`${row},${col}`)) {
-        const mark = document.createElement('span');
-        mark.className = 'mark';
-        mark.textContent = '✕';
-        cell.append(mark);
-        label += ', descartada';
+        if (clashes.has(occupant)) cell.classList.add('clash');
+        if (highlighted.has(occupant)) cell.classList.add('wrong');
+        if (game.locked.includes(occupant)) cell.classList.add('locked');
+        if (game.finished && (occupant === puzzle.murderer || occupant === puzzle.victim)) cell.classList.add(occupant === puzzle.victim ? 'is-victim' : 'is-murderer');
+      } else if (discarded) {
+        const markIcon = document.createElement('span');
+        markIcon.className = 'mark';
+        markIcon.textContent = '✕';
+        cell.append(markIcon);
       }
       // Sombrea filas y columnas ya ocupadas para ayudar a descartar.
       const rowTaken = game.placements.some((p) => p && p.row === row);
       const colTaken = game.placements.some((p) => p && p.col === col);
-      if (person === -1 && (rowTaken || colTaken)) cell.classList.add('shadowed');
-      cell.setAttribute('aria-label', label);
+      if (occupant === -1 && (rowTaken || colTaken)) cell.classList.add('shadowed');
+      cell.setAttribute('aria-label', t('cellAria', {
+        cell: cellLabel({ row, col }),
+        room: roomText(puzzle, puzzle.roomGrid[row][col], code).name,
+        object: object ? objectText(object, code).noun : '',
+        person: occupant !== -1 ? person(occupant).name : '',
+        discarded,
+      }));
     },
   });
   cells.forEach((cell) => {
@@ -195,8 +214,8 @@ function snapshot() {
 function selectTool(next) {
   tool = next;
   renderTools();
-  if (next === MARK) say('Modo descartar: toca casillas para tacharlas (también con clic derecho).');
-  else say(`Colocando a ${puzzle.people[next].name}. Toca su casilla en el plano.`);
+  if (next === MARK) sayKey('markMode');
+  else say(() => t('placing', person(next).name));
 }
 
 function nextUnplaced(after) {
@@ -218,19 +237,19 @@ function onCell(index, forced) {
   if (action === MARK) {
     const occupant = personAt(game, cell.row, cell.col);
     if (occupant !== -1) {
-      if (!remove(game, occupant)) { history.pop(); say('Esa persona está confirmada por una ayuda.'); return; }
-      say(`${puzzle.people[occupant].name} vuelve a estar sin colocar.`);
+      if (!remove(game, occupant)) { history.pop(); sayKey('err_locked'); return; }
+      say(() => t('unplacedAgain', person(occupant).name));
     } else {
       toggleMark(game, cell);
-      say('');
+      say(null);
     }
   } else {
     const wasHere = personAt(game, cell.row, cell.col) === action;
     const error = place(puzzle, game, action, cell);
-    if (error) { history.pop(); say(error); return; }
-    if (wasHere) say(`${puzzle.people[action].name} vuelve a estar sin colocar.`);
+    if (error) { history.pop(); sayKey(`err_${error}`); return; }
+    if (wasHere) say(() => t('unplacedAgain', person(action).name));
     else {
-      say(`${puzzle.people[action].name} → ${cellLabel(cell)}.`);
+      say(() => t('placedAt', person(action).name, cellLabel(cell)));
       tool = nextUnplaced(action);
     }
   }
@@ -243,54 +262,83 @@ function afterMove() {
   renderAll();
   if (!isComplete(game) || game.finished) return;
   if (conflicts(game).size) {
-    say('Todas las personas están en el plano, pero hay filas o columnas repetidas.');
+    sayKey('duplicates');
   } else if (isSolved(puzzle, game)) {
     openVerdict();
   } else {
-    say('Todas las personas están en el plano, pero algo no encaja con las pistas. Revisa las marcadas en rojo.');
+    sayKey('mismatch');
     if (!elements.assist.checked) { elements.assist.checked = true; renderClueList(); }
   }
 }
 
-function openVerdict() {
-  elements.verdictTitle.textContent = '¿Quién es culpable?';
-  elements.verdictText.textContent = 'Las piezas están en su sitio. Señala a la persona que estaba a solas con la víctima.';
-  elements.suspects.replaceChildren(...puzzle.people.flatMap((person, index) => {
-    if (person.victim) return [];
+// ---- Acusación ---------------------------------------------------------------------
+
+function renderVerdict() {
+  if (!verdict) return;
+  const victim = person(puzzle.victim);
+  elements.suspects.replaceChildren();
+  if (verdict.state === 'solved') {
+    const murderer = person(puzzle.murderer);
+    const extras = [game.hintsUsed && t('extraHints', game.hintsUsed), game.checksUsed && t('extraChecks', game.checksUsed)].filter(Boolean);
+    elements.verdictTitle.textContent = t('solvedTitle');
+    elements.verdictText.textContent = t('solvedText', {
+      murderer: murderer.name,
+      role: murderer.role,
+      victim: victim.name,
+      roomIn: roomText(puzzle, puzzle.crimeRoom, locale()).in,
+      time: formatTime(game.elapsed),
+      extras: extras.length ? extras.join(' · ') : t('noHelp'),
+      gender: murderer.gender,
+    });
+    const again = document.createElement('button');
+    again.type = 'button';
+    again.textContent = t('anotherCase', levelLabel(puzzle).toLowerCase());
+    again.addEventListener('click', () => { elements.verdict.close(); startCase(puzzle.difficulty); });
+    elements.suspects.append(again);
+    return;
+  }
+  elements.verdictTitle.textContent = t('verdictQuestion');
+  if (verdict.wrong === undefined) elements.verdictText.textContent = t('verdictPrompt');
+  else {
+    const wrong = person(verdict.wrong);
+    elements.verdictText.textContent = t('wrongAccuse', wrong.name, victim.name, wrong.gender);
+  }
+  elements.suspects.replaceChildren(...puzzle.people.flatMap((_, index) => {
+    const who = person(index);
+    if (who.victim) return [];
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'suspect-choice';
     button.innerHTML = '<span class="emoji"></span><b></b>';
-    button.querySelector('.emoji').textContent = person.emoji;
-    button.querySelector('b').textContent = person.name;
+    button.querySelector('.emoji').textContent = who.emoji;
+    button.querySelector('b').textContent = who.name;
     button.addEventListener('click', () => accuse(index));
     return [button];
   }));
+}
+
+function openVerdict() {
+  verdict = { state: 'asking' };
+  renderVerdict();
   elements.verdict.showModal();
 }
 
 function accuse(index) {
-  const victim = puzzle.people[puzzle.victim];
-  const room = puzzle.rooms[puzzle.crimeRoom];
   if (index !== puzzle.murderer) {
-    elements.verdictText.textContent = `No: ${puzzle.people[index].name} no estaba a solas con ${victim.name}. Mira quién comparte habitación con la víctima.`;
+    verdict = { state: 'asking', wrong: index };
+    renderVerdict();
     return;
   }
   game.finished = 'solved';
   save();
-  const murderer = puzzle.people[index];
-  const extras = [game.hintsUsed && `${game.hintsUsed} ayuda${game.hintsUsed > 1 ? 's' : ''}`, game.checksUsed && `${game.checksUsed} comprobaci${game.checksUsed > 1 ? 'ones' : 'ón'}`].filter(Boolean);
-  elements.verdictTitle.textContent = '¡Caso resuelto!';
-  elements.verdictText.textContent = `${murderer.name}, ${murderer.role}, estaba a solas con ${victim.name} en ${room.article}. Tiempo: ${formatTime(game.elapsed)}${extras.length ? ` · ${extras.join(' · ')}` : ' · sin ayudas'}.`;
-  elements.suspects.replaceChildren();
-  const again = document.createElement('button');
-  again.type = 'button';
-  again.textContent = `Otro caso ${levelLabel(puzzle).toLowerCase()}`;
-  again.addEventListener('click', () => { elements.verdict.close(); startCase(puzzle.difficulty); });
-  elements.suspects.append(again);
+  verdict = { state: 'solved' };
+  renderVerdict();
   renderAll();
-  say(`Caso resuelto en ${formatTime(game.elapsed)}.`);
+  const time = formatTime(game.elapsed);
+  sayKey('solvedStatus', time);
 }
+
+elements.verdict.addEventListener('close', () => { verdict = null; });
 
 function undo() {
   const previous = history.pop();
@@ -299,7 +347,7 @@ function undo() {
   highlighted = new Set();
   save();
   renderAll();
-  say('Movimiento deshecho.');
+  sayKey('undone');
 }
 
 function check() {
@@ -308,68 +356,83 @@ function check() {
   highlighted = new Set(wrong);
   save();
   renderAll();
-  if (!game.placements.some(Boolean)) say('Todavía no has colocado a nadie.');
-  else if (wrong.length === 0) say('Por ahora, todas las personas colocadas están en su sitio.');
-  else say(`${wrong.length} persona${wrong.length > 1 ? 's están' : ' está'} mal colocada${wrong.length > 1 ? 's' : ''} (en rojo).`);
+  if (!game.placements.some(Boolean)) sayKey('nothingPlaced');
+  else if (wrong.length === 0) sayKey('allCorrect');
+  else sayKey('wrongCount', wrong.length);
 }
 
 function hint() {
   snapshot();
-  const person = giveHint(puzzle, game);
-  if (person === null) { history.pop(); say('No hace falta ninguna ayuda: ya está todo colocado.'); return; }
+  const helped = giveHint(puzzle, game);
+  if (helped === null) { history.pop(); sayKey('noHintNeeded'); return; }
   highlighted = new Set();
-  say(`Ayuda: ${puzzle.people[person].name} está en ${cellLabel(puzzle.solution[person])}.`);
-  tool = nextUnplaced(person);
+  say(() => t('hintText', person(helped).name, cellLabel(puzzle.solution[helped])));
+  tool = nextUnplaced(helped);
   afterMove();
 }
 
 function restart() {
-  if (game.placements.some(Boolean) && !game.finished && !window.confirm('¿Borrar todo lo colocado y empezar este caso de nuevo?')) return;
+  if (game.placements.some(Boolean) && !game.finished && !window.confirm(t('confirmRestart'))) return;
   game = newGame(puzzle);
   history = [];
   highlighted = new Set();
   tool = 0;
   save();
   renderAll();
-  say('Caso reiniciado.');
+  sayKey('restarted');
 }
 
 function revealSolution() {
-  if (!window.confirm('¿Seguro que quieres ver la solución? La partida terminará.')) return;
+  if (!window.confirm(t('confirmReveal'))) return;
   reveal(puzzle, game);
   save();
   renderAll();
-  const murderer = puzzle.people[puzzle.murderer];
-  say(`Solución: ${murderer.name}, ${murderer.role}, estaba a solas con ${puzzle.people[puzzle.victim].name} en ${puzzle.rooms[puzzle.crimeRoom].article}.`);
+  say(() => {
+    const murderer = person(puzzle.murderer);
+    return t('solutionText', {
+      murderer: murderer.name,
+      role: murderer.role,
+      victim: person(puzzle.victim).name,
+      roomIn: roomText(puzzle, puzzle.crimeRoom, locale()).in,
+      gender: murderer.gender,
+    });
+  });
 }
 
 async function downloadCurrent() {
-  say('Preparando el PDF…');
+  sayKey('pdfPreparing');
+  const code = locale();
   const { downloadPdf } = await import('./pdf.js');
-  downloadPdf(puzzle, playUrl(puzzle));
-  say('PDF descargado.');
+  downloadPdf(puzzle, playUrl(puzzle, code), code);
+  sayKey('pdfDone');
 }
 
 async function share() {
   const url = playUrl(puzzle);
   try {
     await navigator.clipboard.writeText(url);
-    say('Enlace copiado: quien lo abra jugará este mismo caso.');
+    sayKey('linkCopied');
   } catch {
-    say(`Comparte este enlace: ${url}`);
+    sayKey('shareLink', url);
   }
 }
 
 // ---- Arranque ----------------------------------------------------------------------
 
+function updateUrl() {
+  const url = new URL(window.location.href);
+  url.search = new URLSearchParams({ nivel: puzzle.difficulty, caso: puzzle.seed, lang: locale() }).toString();
+  window.history.replaceState(null, '', url);
+}
+
 async function startCase(difficulty, seed) {
-  say('Preparando el caso…');
+  sayKey('preparing');
   elements.board.classList.add('loading');
   try {
     puzzle = await createPuzzle(difficulty, seed);
   } catch (error) {
     console.error(error);
-    say('No se ha podido generar el caso. Prueba otra vez.');
+    sayKey('loadError');
     elements.board.classList.remove('loading');
     return;
   }
@@ -380,25 +443,30 @@ async function startCase(difficulty, seed) {
   tool = nextUnplaced(-1);
   focusIndex = 0;
   savePreference('nivel', difficulty);
-  const url = new URL(window.location.href);
-  url.search = new URLSearchParams({ nivel: puzzle.difficulty, caso: puzzle.seed }).toString();
-  window.history.replaceState(null, '', url);
+  updateUrl();
   renderHeader();
   renderAll();
-  if (game.finished === 'solved') say('Este caso ya lo resolviste. Puedes empezarlo de nuevo o elegir otro.');
-  else if (game.placements.some(Boolean)) say('Partida recuperada: sigue donde lo dejaste.');
-  else say(`Empieza colocando a ${puzzle.people[tool].name}, o a quien prefieras.`);
+  if (game.finished === 'solved') sayKey('alreadySolved');
+  else if (game.placements.some(Boolean)) sayKey('resumed');
+  else {
+    const first = tool;
+    say(() => t('startWith', person(first).name));
+  }
 }
 
 function buildLevelPicker() {
+  elements.levels.replaceChildren();
   for (const [key, settings] of Object.entries(DIFFICULTIES)) {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'level-chip';
     button.dataset.difficulty = key;
-    button.innerHTML = `<b>${settings.label}</b><small>${settings.size} × ${settings.size}</small>`;
+    button.innerHTML = '<b></b><small></small>';
+    button.querySelector('b').textContent = levelName(key, locale());
+    button.querySelector('small').textContent = `${settings.size} × ${settings.size}`;
+    button.setAttribute('aria-pressed', String(puzzle?.difficulty === key));
     button.addEventListener('click', () => {
-      if (game && !game.finished && game.placements.some(Boolean) && !window.confirm('¿Dejar este caso y empezar uno nuevo? Tu avance se queda guardado en este navegador.')) return;
+      if (game && !game.finished && game.placements.some(Boolean) && !window.confirm(t('confirmLeave'))) return;
       startCase(key);
     });
     elements.levels.append(button);
@@ -419,7 +487,7 @@ function moveFocus(delta) {
 }
 
 document.addEventListener('keydown', (event) => {
-  if (!puzzle || elements.verdict.open || event.target.closest('input, textarea')) return;
+  if (!puzzle || elements.verdict.open || event.target.closest('input, textarea, select')) return;
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') { event.preventDefault(); undo(); return; }
   if (event.ctrlKey || event.metaKey || event.altKey) return;
   const number = Number(event.key);
@@ -455,8 +523,23 @@ $('#restart').addEventListener('click', restart);
 $('#reveal').addEventListener('click', revealSolution);
 $('#pdf').addEventListener('click', downloadCurrent);
 $('#share').addEventListener('click', share);
+
+// ---- Idioma -------------------------------------------------------------------------
+
+mountLanguagePicker($('#language'));
+translateDocument();
 renderRules($('#rules'));
 buildLevelPicker();
+onLocaleChange(() => {
+  renderRules($('#rules'));
+  buildLevelPicker();
+  if (!puzzle) return;
+  updateUrl();
+  renderHeader();
+  renderAll();
+  renderVerdict();
+  if (message) say(message);
+});
 
 const params = new URLSearchParams(window.location.search);
 const requested = params.get('nivel');

@@ -7,35 +7,30 @@
 
 export const DIFFICULTIES = {
   facil: {
-    label: 'Fácil',
     size: 4,
     rooms: 3,
     types: { inRoom: 4, onObject: 3, row: 1, col: 1, besideObject: 1, onFloor: 1, corner: 1 },
     everyoneSpeaks: true,
   },
   media: {
-    label: 'Media',
     size: 5,
     rooms: 4,
     types: { inRoom: 3, notInRoom: 1, onObject: 3, besideObject: 2, row: 1, col: 1, sameRoom: 1, edge: 1, corner: 1, roomCount: 1, onFloor: 1 },
     everyoneSpeaks: true,
   },
   dificil: {
-    label: 'Difícil',
     size: 6,
     rooms: 5,
     types: { inRoom: 3, notInRoom: 2, onObject: 2, besideObject: 2, north: 1, west: 1, sameRoom: 1, differentRoom: 1, diagonal: 1, edge: 1, notEdge: 1, roomCount: 1, aloneInRoom: 1 },
     everyoneSpeaks: false,
   },
   experto: {
-    label: 'Experto',
     size: 7,
     rooms: 6,
     types: { inRoom: 2, notInRoom: 2, onObject: 2, besideObject: 2, onFloor: 1, north: 1, west: 1, northBy: 1, westBy: 1, sameRoom: 1, differentRoom: 1, diagonal: 1, edge: 1, notEdge: 1, corner: 1, roomCount: 1, aloneInRoom: 1, emptyRooms: 1 },
     everyoneSpeaks: false,
   },
   maestro: {
-    label: 'Maestro',
     size: 8,
     rooms: 7,
     types: { inRoom: 2, notInRoom: 2, onObject: 2, besideObject: 2, onFloor: 1, north: 1, west: 1, northBy: 1, westBy: 1, sameRoom: 2, differentRoom: 2, diagonal: 1, edge: 1, notEdge: 1, corner: 1, roomCount: 2, aloneInRoom: 2, emptyRooms: 1 },
@@ -44,63 +39,41 @@ export const DIFFICULTIES = {
 };
 
 export const OBJECTS = {
-  silla: { emoji: '🪑', name: 'una silla', occupiable: true },
-  sofa: { emoji: '🛋️', name: 'un sofá', occupiable: true },
-  cama: { emoji: '🛏️', name: 'una cama', occupiable: true },
-  planta: { emoji: '🪴', name: 'una planta', occupiable: false },
-  estanteria: { emoji: '📚', name: 'una estantería', occupiable: false },
-  tele: { emoji: '📺', name: 'una televisión', occupiable: false },
-  piano: { emoji: '🎹', name: 'un piano', occupiable: false },
+  silla: { emoji: '🪑', occupiable: true },
+  sofa: { emoji: '🛋️', occupiable: true },
+  cama: { emoji: '🛏️', occupiable: true },
+  planta: { emoji: '🪴', occupiable: false },
+  estanteria: { emoji: '📚', occupiable: false },
+  tele: { emoji: '📺', occupiable: false },
+  piano: { emoji: '🎹', occupiable: false },
 };
 const OCCUPIABLE = Object.keys(OBJECTS).filter((key) => OBJECTS[key].occupiable);
 const BLOCKING = Object.keys(OBJECTS).filter((key) => !OBJECTS[key].occupiable);
 
-const ROOMS = [
-  { name: 'Cocina', article: 'la cocina' },
-  { name: 'Salón', article: 'el salón' },
-  { name: 'Biblioteca', article: 'la biblioteca' },
-  { name: 'Dormitorio', article: 'el dormitorio' },
-  { name: 'Comedor', article: 'el comedor' },
-  { name: 'Estudio', article: 'el estudio' },
-  { name: 'Vestíbulo', article: 'el vestíbulo' },
-  { name: 'Invernadero', article: 'el invernadero' },
-  { name: 'Despacho', article: 'el despacho' },
-  { name: 'Desván', article: 'el desván' },
-  { name: 'Bodega', article: 'la bodega' },
-  { name: 'Galería', article: 'la galería' },
-];
+// Identificadores internos: los textos de cada idioma están en src/i18n/locales.
+const ROOMS = ['cocina', 'salon', 'biblioteca', 'dormitorio', 'comedor', 'estudio', 'vestibulo', 'invernadero', 'despacho', 'desvan', 'bodega', 'galeria'];
 
 const SUSPECTS = [
-  { name: 'Alba', emoji: '👩‍🍳', gender: 'f', role: 'la cocinera' },
-  { name: 'Bruno', emoji: '👨‍🌾', gender: 'm', role: 'el jardinero' },
-  { name: 'Clara', emoji: '👩‍⚕️', gender: 'f', role: 'la doctora' },
-  { name: 'Diego', emoji: '👨‍🔧', gender: 'm', role: 'el mecánico' },
-  { name: 'Elena', emoji: '👩‍🎨', gender: 'f', role: 'la pintora' },
-  { name: 'Félix', emoji: '🤵', gender: 'm', role: 'el mayordomo' },
-  { name: 'Gloria', emoji: '👵', gender: 'f', role: 'la abuela' },
-  { name: 'Hugo', emoji: '👨‍🏫', gender: 'm', role: 'el profesor' },
-  { name: 'Inés', emoji: '👩‍🔬', gender: 'f', role: 'la científica' },
-  { name: 'Julia', emoji: '👩‍✈️', gender: 'f', role: 'la piloto' },
-  { name: 'Marcos', emoji: '👨‍🚒', gender: 'm', role: 'el bombero' },
-  { name: 'Nora', emoji: '👩‍💼', gender: 'f', role: 'la abogada' },
+  { id: 'alba', emoji: '👩‍🍳', gender: 'f', role: 'cook' },
+  { id: 'bruno', emoji: '👨‍🌾', gender: 'm', role: 'gardener' },
+  { id: 'clara', emoji: '👩‍⚕️', gender: 'f', role: 'doctor' },
+  { id: 'diego', emoji: '👨‍🔧', gender: 'm', role: 'mechanic' },
+  { id: 'elena', emoji: '👩‍🎨', gender: 'f', role: 'painter' },
+  { id: 'felix', emoji: '🤵', gender: 'm', role: 'butler' },
+  { id: 'gloria', emoji: '👵', gender: 'f', role: 'grandmother' },
+  { id: 'hugo', emoji: '👨‍🏫', gender: 'm', role: 'teacher' },
+  { id: 'ines', emoji: '👩‍🔬', gender: 'f', role: 'scientist' },
+  { id: 'julia', emoji: '👩‍✈️', gender: 'f', role: 'pilot' },
+  { id: 'marcos', emoji: '👨‍🚒', gender: 'm', role: 'firefighter' },
+  { id: 'nora', emoji: '👩‍💼', gender: 'f', role: 'lawyer' },
 ];
 const VICTIMS = [
-  { name: 'Víctor', emoji: '👴', gender: 'm', role: 'el millonario' },
-  { name: 'Rosalía', emoji: '👸', gender: 'f', role: 'la condesa' },
+  { id: 'victor', emoji: '👴', gender: 'm', role: 'millionaire' },
+  { id: 'rosalia', emoji: '👸', gender: 'f', role: 'countess' },
 ];
 
-const TITLES = [
-  ['El misterio', 'de la última cena'],
-  ['Muerte', 'en la casa de campo'],
-  ['El secreto', 'del salón cerrado'],
-  ['Un crimen', 'a la hora del té'],
-  ['La noche', 'de la tormenta'],
-  ['El caso', 'del reloj parado'],
-  ['Sombras', 'en el desván'],
-  ['La herencia', 'envenenada'],
-  ['El último brindis', 'de la familia'],
-  ['Silencio', 'en la mansión'],
-];
+// Número de títulos de caso disponibles en cada idioma.
+export const TITLE_COUNT = 10;
 
 // Generador pseudoaleatorio con semilla (mulberry32).
 function seededRandom(seed) {
@@ -280,54 +253,6 @@ export function countSolutions(puzzle, clues = puzzle.clues, limit = 2, budget =
   return count;
 }
 
-// ---- Textos -------------------------------------------------------------------
-
-const ending = (person) => (person.gender === 'f' ? 'a' : 'o');
-const NUMBERS = ['ninguna', 'una', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho'];
-const rowsText = (distance) => (distance === 1 ? 'justo una fila' : `exactamente ${NUMBERS[distance]} filas`);
-const colsText = (distance) => (distance === 1 ? 'justo una columna' : `exactamente ${NUMBERS[distance]} columnas`);
-
-export function clueText(puzzle, clue) {
-  const a = puzzle.people[clue.a];
-  const b = puzzle.people[clue.b];
-  const room = puzzle.rooms[clue.room];
-  switch (clue.type) {
-    case 'inRoom': return `${a.name} estaba en ${room.article}.`;
-    case 'notInRoom': return `${a.name} no estuvo en ${room.article}.`;
-    case 'onObject':
-      if (clue.object === 'cama') return `${a.name} estaba tumbad${ending(a)} en una cama.`;
-      return `${a.name} estaba sentad${ending(a)} en ${OBJECTS[clue.object].name}.`;
-    case 'besideObject': return `${a.name} estaba junto a ${OBJECTS[clue.object].name}.`;
-    case 'onFloor': return `${a.name} no estaba ni sentad${ending(a)} ni tumbad${ending(a)}: su casilla no tenía muebles.`;
-    case 'row': return `${a.name} estaba en la fila ${clue.row + 1}.`;
-    case 'col': return `${a.name} estaba en la columna ${String.fromCharCode(65 + clue.col)}.`;
-    case 'edge': return `${a.name} estaba pegad${ending(a)} a una pared exterior de la casa.`;
-    case 'notEdge': return `${a.name} no tocaba ninguna pared exterior de la casa.`;
-    case 'corner': return `${a.name} estaba en una esquina de la casa.`;
-    case 'north': return clue.flip ? `${b.name} estaba más al sur que ${a.name}.` : `${a.name} estaba más al norte que ${b.name}.`;
-    case 'west': return clue.flip ? `${b.name} estaba más al este que ${a.name}.` : `${a.name} estaba más al oeste que ${b.name}.`;
-    case 'northBy': return clue.flip
-      ? `${b.name} estaba ${rowsText(clue.distance)} más al sur que ${a.name}.`
-      : `${a.name} estaba ${rowsText(clue.distance)} más al norte que ${b.name}.`;
-    case 'westBy': return clue.flip
-      ? `${b.name} estaba ${colsText(clue.distance)} más al este que ${a.name}.`
-      : `${a.name} estaba ${colsText(clue.distance)} más al oeste que ${b.name}.`;
-    case 'sameRoom': return `${a.name} y ${b.name} estaban en la misma habitación.`;
-    case 'differentRoom': return `${a.name} y ${b.name} estaban en habitaciones distintas.`;
-    case 'diagonal': return `${a.name} y ${b.name} estaban en casillas que se tocan en diagonal.`;
-    case 'roomCount':
-      if (clue.count === 0) return `Nadie estuvo en ${room.article}.`;
-      if (clue.count === 1) return `En ${room.article} había una sola persona.`;
-      return `En ${room.article} había exactamente ${NUMBERS[clue.count]} personas.`;
-    case 'aloneInRoom': return `${a.name} estaba sol${ending(a)} en su habitación.`;
-    case 'emptyRooms':
-      if (clue.count === 0) return 'Ninguna habitación quedó vacía.';
-      if (clue.count === 1) return 'Exactamente una habitación quedó vacía.';
-      return `Exactamente ${NUMBERS[clue.count]} habitaciones quedaron vacías.`;
-    default: return '';
-  }
-}
-
 // ---- Generación ------------------------------------------------------------------
 
 function candidateClues(puzzle, types) {
@@ -440,15 +365,15 @@ function buildCase(settings) {
     }
   }
   const rooms = shuffle(ROOMS).slice(0, settings.rooms);
-  const [title, subtitle] = pick(TITLES);
-  const puzzle = { size, roomGrid, rooms, objects, people, solution, murderer, victim: victimIndex, crimeRoom, title, subtitle };
+  const titleIndex = Math.floor(random() * TITLE_COUNT);
+  const puzzle = { size, roomGrid, rooms, objects, people, solution, murderer, victim: victimIndex, crimeRoom, titleIndex };
   const clues = chooseClues(puzzle, settings);
   if (!clues) return null;
   const order = (clue) => (clue.subject === undefined ? people.length : clue.subject);
   return {
     ...puzzle,
     clues: clues
-      .map(({ weight, ...clue }) => ({ ...clue, subject: clue.flip ? clue.b : clue.a, text: clueText(puzzle, clue) }))
+      .map(({ weight, ...clue }) => ({ ...clue, subject: clue.flip ? clue.b : clue.a }))
       .sort((x, y) => order(x) - order(y)),
   };
 }

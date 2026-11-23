@@ -1,22 +1,24 @@
 // Piezas compartidas entre la portada, el juego en línea y el PDF.
-import { DIFFICULTIES, OBJECTS } from './puzzle.js';
+// Todo lo que se muestra se pide en un idioma concreto (por defecto, el activo).
+import { OBJECTS } from './puzzle.js';
+import { locale } from './i18n/index.js';
+import * as content from './i18n/content.js';
+import { dictionary, levelName } from './i18n/content.js';
 
 export const ROOM_COLORS = ['#e3ede0', '#f4e8d4', '#dfe7f0', '#f2e1e3', '#e9e2f1', '#e0efeb', '#f1eed7', '#e7e5df'];
 
-export const RULES = [
-  'Coloca a cada persona (los sospechosos y la víctima) en una casilla: en cada fila y en cada columna hay exactamente una persona.',
-  'Se puede estar en sillas, sofás y camas, pero no en casillas con plantas, estanterías, televisiones o pianos.',
-  '"Junto a" significa en una casilla contigua (arriba, abajo, izquierda o derecha) de la misma habitación.',
-  'El norte está arriba. "Más al norte" significa en cualquier fila superior; "justo una fila" significa la de al lado.',
-  'Todas las pistas son ciertas. La persona culpable es la única que estaba a solas con la víctima en una habitación.',
-];
-
-export const STORY = 'Esta noche alguien no salió con vida de la casa. Ordena a los implicados en el plano y descubre quién se quedó a solas con la víctima.';
+export const rules = (code = locale()) => dictionary(code).rules;
+export const story = (code = locale()) => dictionary(code).story;
+export const levelLabel = (puzzle, code = locale()) => levelName(puzzle.difficulty, code);
+// Igual que en i18n/content.js, pero con el idioma activo cuando no se indica otro.
+export const caseTitle = (puzzle, code = locale()) => content.caseTitle(puzzle, code);
+export const clueText = (puzzle, clue, code = locale()) => content.clueText(puzzle, clue, code);
+export const personText = (puzzle, index, code = locale()) => content.personText(puzzle, index, code);
+export const roomText = (puzzle, index, code = locale()) => content.roomText(puzzle, index, code);
 
 export const HOUSE_EMOJI = '🏠';
 
 export const letter = (index) => String.fromCharCode(65 + index);
-export const levelLabel = (puzzle) => DIFFICULTIES[puzzle.difficulty].label;
 
 // Muros de cada casilla: true si ese lado separa habitaciones distintas o es la fachada.
 export function roomBorders(puzzle, row, col) {
@@ -26,18 +28,18 @@ export function roomBorders(puzzle, row, col) {
 }
 
 // Casilla donde se rotula el nombre de cada habitación (la primera en orden de lectura).
-export function labelCells(puzzle) {
+export function labelCells(puzzle, code = locale()) {
   const cells = new Map();
   puzzle.roomGrid.forEach((row, r) => row.forEach((room, c) => { if (!cells.has(room)) cells.set(room, `${r},${c}`); }));
-  return new Map([...cells].map(([room, key]) => [key, puzzle.rooms[room].name]));
+  return new Map([...cells].map(([room, key]) => [key, content.roomText(puzzle, room, code).name]));
 }
 
 export const clueEmoji = (puzzle, clue) => (clue.subject === undefined ? HOUSE_EMOJI : puzzle.people[clue.subject].emoji);
 
 // Enlace para jugar en línea un caso concreto.
-export function playUrl(puzzle, base = window.location.href) {
+export function playUrl(puzzle, code = locale(), base = window.location.href) {
   const url = new URL('jugar.html', base);
-  url.search = new URLSearchParams({ nivel: puzzle.difficulty, caso: puzzle.seed }).toString();
+  url.search = new URLSearchParams({ nivel: puzzle.difficulty, caso: puzzle.seed, lang: code }).toString();
   return url.toString();
 }
 
@@ -84,12 +86,15 @@ export function renderBoard(container, puzzle, { cellTag = 'span', decorate } = 
 }
 
 export function renderPeople(container, puzzle, { tag = 'div', decorate } = {}) {
-  container.replaceChildren(...puzzle.people.map((person, index) => {
+  const code = locale();
+  const victimTag = dictionary(code).ui.victimTag;
+  container.replaceChildren(...puzzle.people.map((_, index) => {
+    const person = content.personText(puzzle, index, code);
     const item = make(tag, person.victim ? 'person victim' : 'person');
     if (tag === 'button') item.type = 'button';
     item.append(make('span', 'emoji', person.emoji));
     const text = make('span', 'person-text');
-    text.append(make('b', '', person.name), make('small', '', person.victim ? `${person.role} · víctima` : person.role));
+    text.append(make('b', '', person.name), make('small', '', person.victim ? `${person.role} · ${victimTag}` : person.role));
     item.append(text);
     decorate?.(item, index);
     return item;
@@ -99,12 +104,12 @@ export function renderPeople(container, puzzle, { tag = 'div', decorate } = {}) 
 export function renderClues(container, puzzle, { decorate } = {}) {
   container.replaceChildren(...puzzle.clues.map((clue, index) => {
     const item = make('li');
-    item.append(make('span', 'emoji', clueEmoji(puzzle, clue)), make('span', 'clue-text', clue.text));
+    item.append(make('span', 'emoji', clueEmoji(puzzle, clue)), make('span', 'clue-text', content.clueText(puzzle, clue, locale())));
     decorate?.(item, index);
     return item;
   }));
 }
 
 export function renderRules(container) {
-  container.replaceChildren(...RULES.map((rule) => make('li', '', rule)));
+  container.replaceChildren(...rules().map((rule) => make('li', '', rule)));
 }
